@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="$KONG Mint Pass sale — a 3-tier bonding curve for Agent ID holders on BNB Chain. Mint a pass, claim $KONG after graduation, or get a 100% USDT refund if the sale does not fill." />
+  <meta property="og:title" content="$KONG — Kong Mint Pass Sale" />
+  <meta property="og:description" content="Mint a Kong Pass (1 pass = 1 share). 10,000 shares, 3 tiers, graduation at sell-out — or a 100% USDT refund if the sale does not fill in 30 days. Agent ID holders only." />
+  <meta property="og:image" content="https://zainumq.github.io/kong/kong-pass-tier1.jpg" />
+  <meta property="og:url" content="https://zainumq.github.io/kong/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>$KONG — Kong Mint Pass Sale</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <img class="brand-img" src="https://zainumq.github.io/kong/kong-pass-tier1.jpg" alt="" width="40" height="40" />
+        <div>
+          <h1>$KONG <span class="brand-kong">Mint Pass</span></h1>
+          <p class="brand-sub">Kong Alpha — bonding-curve sale for Agent ID holders</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span id="network-pill" class="pill pill-muted" hidden></span>
+        <button id="connect-btn" class="btn btn-primary" type="button">Connect wallet</button>
+        <span id="account-label" class="account-label" hidden></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="error-banner" class="banner banner-error" hidden></div>
+
+    <div id="network-warning" class="banner banner-warn" hidden>
+      <strong>Wrong network.</strong>
+      <span>Your wallet is not on BNB Smart Chain (chain 56). Minting, claiming and refunds need BSC.</span>
+      <button id="switch-network-btn" class="btn btn-small" type="button">Switch to BSC</button>
+    </div>
+
+    <section class="hero" aria-label="About the sale">
+      <img class="hero-img" src="https://zainumq.github.io/kong/kong-pass-tier1.jpg" alt="Kong Mint Pass — Tier 1 Gold artwork: King Kong dressed as a secret agent" width="360" height="360" />
+      <div class="intro">
+        <h2 class="hero-title">Mint a pass. Own a share of $KONG.</h2>
+        <p>
+          Each Mint Pass is one share of the $KONG bonding-curve sale. Buy
+          early for a lower price <em>and</em> more tokens per share. When
+          all 10,000 shares sell, the sale graduates: a PancakeSwap pool
+          opens and passes can be claimed for $KONG.
+        </p>
+        <p class="intro-note">
+          If the sale does not sell out in 30 days, every pass holder gets a
+          <strong>100% USDT refund</strong> — the funds stay in escrow until
+          graduation, so a full refund is always possible.
+        </p>
+        <p class="intro-note">
+          Agent ID holders only. Max 10 passes per wallet. No admin, no
+          owner — the rules are fixed in the contract.
+        </p>
+      </div>
+    </section>
+
+    <section id="sale-section" aria-label="Sale status">
+      <div class="section-head">
+        <h2>Sale status</h2>
+        <span id="sale-state-pill" class="pill pill-muted">Loading…</span>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h2 id="countdown-label">Sale opens in</h2>
+          <p id="countdown" class="big-status">—</p>
+          <p class="card-note" id="countdown-note">Sale opens 1 December 2026, 00:00 WIB.</p>
+        </div>
+        <div class="card">
+          <h2>Shares sold</h2>
+          <p id="shares-status" class="big-status">—</p>
+          <div class="progress" aria-hidden="true"><div id="shares-bar" class="progress-bar"></div></div>
+          <p class="card-note" id="raised-note">Total raised: —</p>
+        </div>
+        <div class="card">
+          <h2>Current tier</h2>
+          <p id="tier-status" class="big-status">—</p>
+          <p class="card-note" id="tier-note">Price per share: —</p>
+        </div>
+      </div>
+      <div id="graduate-box" class="banner banner-warn" hidden>
+        <strong>Sold out — graduation is pending.</strong>
+        <span>All 10,000 shares are sold. Anyone can trigger graduation, which opens the liquidity pool and claims.</span>
+        <button id="graduate-btn" class="btn btn-primary btn-small" type="button">Graduate the sale</button>
+      </div>
+      <div id="graduated-box" class="banner banner-ok" hidden>
+        <strong>Graduated.</strong>
+        <span>The PancakeSwap pool is live and passes can be claimed for $KONG below. Referral rewards can be claimed too.</span>
+      </div>
+      <div id="refund-window-box" class="banner banner-warn" hidden>
+        <strong>Sale ended without selling out — the refund window is open.</strong>
+        <span>Burn your passes for a 100% USDT refund before the window closes.</span>
+      </div>
+    </section>
+
+    <section id="tiers-section" aria-label="Tiers">
+      <h2>Tiers</h2>
+      <p class="section-note">
+        Your tier is fixed when you mint — earlier shares cost less and claim
+        more $KONG. A purchase that crosses a tier boundary is priced per share.
+      </p>
+      <div id="tier-list" class="tier-grid"></div>
+    </section>
+
+    <section id="mint-section" aria-label="Mint passes">
+      <div class="section-head">
+        <h2>Mint passes</h2>
+        <span id="agent-id-pill" class="pill pill-muted">Connect your wallet to check your Agent ID.</span>
+      </div>
+      <p class="section-note">
+        Minting needs an Agent ID (.ai name) in the connected wallet, and USDT
+        on BNB Smart Chain. Each mint is a transaction you review and confirm
+        yourself in your wallet.
+      </p>
+
+      <div id="mint-not-started" class="banner banner-warn" hidden>
+        <strong>The sale has not opened yet.</strong>
+        <span>Minting opens 1 December 2026, 00:00 WIB. The countdown above shows the time left.</span>
+      </div>
+      <div id="mint-no-agent-id" class="banner banner-error" hidden>
+        <strong>No Agent ID in this wallet.</strong>
+        <span>Only Agent ID holders can mint. Claim your free .ai name in the Binance app first — minting from this wallet would fail.</span>
+      </div>
+      <div id="mint-cap-note" class="banner banner-warn" hidden></div>
+
+      <div class="mint-box">
+        <div class="mint-row">
+          <label class="mint-label" for="amount-display">Passes to mint</label>
+          <div class="stepper">
+            <button id="amount-minus" class="btn btn-small" type="button" aria-label="Decrease amount">−</button>
+            <span id="amount-display" class="stepper-value">1</span>
+            <button id="amount-plus" class="btn btn-small" type="button" aria-label="Increase amount">+</button>
+          </div>
+          <span id="amount-hint" class="muted-text">Max 10 per wallet.</span>
+        </div>
+
+        <div class="mint-row">
+          <label class="mint-label" for="referrer-input">Referrer <span class="muted-text">(optional)</span></label>
+          <input id="referrer-input" class="text-input mono" type="text" placeholder="0x… (address of the person who referred you)" autocomplete="off" spellcheck="false" />
+        </div>
+        <p id="referrer-note" class="muted-text" hidden></p>
+
+        <div class="quote-box" id="quote-box">
+          <div class="quote-row"><span>You pay</span><strong id="quote-usdt">—</strong></div>
+          <div class="quote-row"><span>You claim after graduation</span><strong id="quote-kong">—</strong></div>
+          <div class="quote-row" id="quote-referral-row" hidden><span>Your referrer earns</span><strong id="quote-referral">—</strong></div>
+          <div class="quote-row muted-row"><span>Your USDT balance</span><span id="usdt-balance">—</span></div>
+          <div class="quote-row muted-row"><span>USDT approved for the sale</span><span id="usdt-allowance">—</span></div>
+        </div>
+
+        <div class="mint-actions">
+          <button id="approve-btn" class="btn btn-primary" type="button" disabled hidden>Approve USDT</button>
+          <button id="mint-btn" class="btn btn-primary" type="button" disabled>Mint</button>
+        </div>
+        <p id="mint-hint" class="muted-text">Connect your wallet to mint.</p>
+      </div>
+      <div id="tx-status" class="tx-status" hidden></div>
+    </section>
+
+    <section id="referral-section" aria-label="Referrals">
+      <h2>Referrals</h2>
+      <p class="section-note">
+        Earn <strong>3% of the $KONG your referrals claim</strong> — 1,800 KONG
+        per Tier 1 share, 1,500 per Tier 2, 1,200 per Tier 3. Your link only
+        earns while you hold at least one Mint Pass, and rewards are claimable
+        after graduation.
+      </p>
+      <div class="referral-box">
+        <label class="mint-label" for="referral-link">Your referral link</label>
+        <div class="referral-row">
+          <input id="referral-link" class="text-input mono" type="text" readonly value="Connect your wallet to get your link." />
+          <button id="copy-link-btn" class="btn btn-small" type="button" disabled>Copy</button>
+        </div>
+        <p id="referral-hold-note" class="muted-text">You need to hold at least one Mint Pass for referrals to earn rewards.</p>
+        <div class="quote-box">
+          <div class="quote-row"><span>Rewards earned</span><strong id="referral-earned">—</strong></div>
+          <div class="quote-row"><span>Claimable now</span><strong id="referral-claimable">—</strong></div>
+        </div>
+        <div class="mint-actions">
+          <button id="claim-referral-btn" class="btn btn-primary" type="button" disabled>Claim referral rewards</button>
+        </div>
+        <p id="referral-hint" class="muted-text">Referral rewards can be claimed after graduation.</p>
+      </div>
+    </section>
+
+    <section id="claim-section" aria-label="Claim your KONG" hidden>
+      <div class="section-head">
+        <h2>Your passes — claim $KONG</h2>
+        <button id="claim-all-btn" class="btn btn-primary" type="button" disabled>Claim all</button>
+      </div>
+      <p class="section-note">
+        Claiming burns your pass and sends you its $KONG. Your KONG balance:
+        <strong id="kong-balance">—</strong>
+      </p>
+      <div id="pass-list" class="pass-grid"></div>
+    </section>
+
+    <section id="refund-section" aria-label="Refund your passes" hidden>
+      <div class="section-head">
+        <h2>Your passes — refund USDT</h2>
+        <button id="refund-all-btn" class="btn btn-primary" type="button" disabled>Refund all</button>
+      </div>
+      <p class="section-note">
+        The sale did not sell out, so every pass is refundable for 100% of the
+        USDT paid for it. Refunding burns your pass. The window closes
+        <strong id="refund-deadline-label">—</strong>.
+      </p>
+      <div id="refund-list" class="pass-grid"></div>
+    </section>
+
+    <section id="about-section" aria-label="How it works">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li><strong>Mint</strong> — buy Mint Passes with USDT (1 pass = 1 share, max 10 per wallet). Earlier tiers are cheaper and claim more $KONG.</li>
+        <li><strong>Graduation</strong> — when all 10,000 shares sell, 250M $KONG + 80% of the USDT open a PancakeSwap pool (liquidity locked forever), 20% goes to the treasury, and claims open.</li>
+        <li><strong>Claim</strong> — burn your pass for its $KONG (60,000 / 50,000 / 40,000 by tier). Passes are tradable on secondary markets before that.</li>
+        <li><strong>Refund</strong> — if the sale does not sell out in 30 days, a 14-day refund window opens: burn your pass for a 100% USDT refund.</li>
+        <li><strong>Refer</strong> — share your link and earn 3% of your referrals' claimable $KONG, claimable after graduation.</li>
+      </ol>
+      <ul class="facts">
+        <li><strong>Total supply:</strong> 1,000,000,000 $KONG — 485M sale claims, 250M liquidity, 100M treasury (vested), 100M team (vested), 15M referral pool, 50M community.</li>
+        <li><strong>Opening pool price at graduation:</strong> 250M $KONG + 12,600 USDT ≈ $0.0000504 per $KONG (at full sell-out).</li>
+        <li><strong>Admin:</strong> none. No owner, no pause, no upgrade, no withdraw function. The curve, the tiers and the refund rules are immutable.</li>
+        <li><strong>Pass royalty:</strong> 5% to the treasury on secondary sales (ERC-2981).</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul class="facts">
+        <li><strong>KongSale:</strong> <a class="mono" id="footer-sale" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>KongToken ($KONG):</strong> <a class="mono" id="footer-token" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>KongMintPass:</strong> <a class="mono" id="footer-pass" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>USDT:</strong> <a class="mono" id="footer-usdt" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>Agent ID registry:</strong> <a class="mono" id="footer-agent-id" href="#" target="_blank" rel="noopener">—</a></li>
+      </ul>
+      <p>
+        $KONG is a utility token for Kong Alpha — early access to verified
+        free-mint signals for Agent ID holders. Contracts are verified on
+        BscScan and Sourcify; this page is a static frontend with no server.
+      </p>
+      <p class="footer-note">
+        Nothing here is financial advice or a promise of returns. $KONG has no
+        guaranteed value; the initial pool is thin and early sellers can move
+        the price fast. Do your own research, and never spend more than you can
+        afford to lose. The only guarantee in the contract is the 100% USDT
+        refund if the sale does not sell out.
+      </p>
+    </div>
+  </footer>
+
+  <noscript>
+    <p style="text-align:center;padding:2rem">$KONG minting needs JavaScript to talk to your wallet and read the blockchain.</p>
+  </noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
