@@ -1,0 +1,137 @@
+/* Marketplace $KONG — gaya tambahan di atas ../styles.css (halaman mint).
+   Variabel warna, tipografi, tombol, kartu, dan banner diwarisi dari
+   styles.css agar kedua halaman terlihat konsisten. File ini hanya berisi
+   komponen yang spesifik untuk market: filter, kartu listing, form list,
+   kotak konfirmasi beli, dan tabel info. */
+
+/* Filter listing */
+
+.filter-bar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin: 1rem 0;
+}
+
+.filter-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.filter-select {
+  min-width: 11rem;
+  cursor: pointer;
+}
+
+.rates-note { margin-top: 1rem; }
+
+/* Pesan kosong di dalam grid (listing / pass saya) harus membentang
+   selebar grid, bukan terjepit di satu kolom kartu (200px). */
+.pass-grid > .empty-note { grid-column: 1 / -1; }
+
+/* Kartu listing (memakai .pass-card/.pass-grid dari styles.css) */
+
+.listing-card .listing-price {
+  color: var(--accent);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.listing-card .listing-idr {
+  color: var(--text) !important;
+  font-weight: 600;
+}
+
+.listing-split { font-size: 0.85rem; }
+
+.listing-hint { color: var(--muted); font-size: 0.9rem; }
+
+.listing-stale-note {
+  color: var(--amber) !important;
+  font-size: 0.9rem;
+}
+
+.listing-status {
+  color: var(--green) !important;
+  font-weight: 600;
+}
+
+/* Kotak konfirmasi beli */
+
+.confirm-box {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.confirm-box h3 { margin: 0; font-size: 1.1rem; }
+
+/* Form list / ubah harga di kartu "Pass saya" */
+
+.list-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.list-label { font-weight: 600; font-size: 0.9rem; }
+
+.list-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.list-input { min-width: 0; }
+
+.list-currency {
+  flex: none;
+  min-width: 6.5rem;
+  cursor: pointer;
+}
+
+.floor-note {
+  color: var(--muted) !important;
+  font-size: 0.85rem;
+}
+
+.list-form .btn { align-self: flex-start; }
+
+/* Tabel info (floor & pembagian) */
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  margin: 0.75rem 0;
+}
+
+.info-table th,
+.info-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.info-table th { color: var(--muted); font-size: 0.85rem; }
+
+.info-table tbody tr:last-child td { border-bottom: 1px solid var(--border); }
+
+@media (max-width: 640px) {
+  .info-table { font-size: 0.85rem; }
+  .info-table th,
+  .info-table td { padding: 0.4rem 0.5rem; }
+  .filter-select { min-width: 0; flex: 1; }
+  .filter-label { flex: 1 1 40%; }
+}

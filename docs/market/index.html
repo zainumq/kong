@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Marketplace $KONG — jual beli Kong Mint Pass di BNB Chain. Bayar USDT atau BNB, royalti 5% ke treasury, fee market 1%. Non-custodial: pass tetap di wallet penjual." />
+  <meta property="og:title" content="Marketplace $KONG — Kong Mint Pass" />
+  <meta property="og:description" content="Jual beli Kong Mint Pass (1 pass = 1 share $KONG). Bayar USDT atau BNB. Floor = harga mint per tier." />
+  <meta property="og:image" content="https://zainumq.github.io/kong/kong-pass-tier1.jpg" />
+  <title>Marketplace $KONG — Kong Mint Pass</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="./market.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <img class="brand-img" src="https://zainumq.github.io/kong/kong-pass-tier1.jpg" alt="" width="40" height="40" />
+        <div>
+          <h1>$KONG <span class="brand-kong">Marketplace</span></h1>
+          <p class="brand-sub">Jual beli Kong Mint Pass — USDT atau BNB</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="btn" href="../">← Halaman Mint</a>
+        <span id="network-pill" class="pill pill-muted" hidden></span>
+        <button id="connect-btn" class="btn btn-primary" type="button">Hubungkan wallet</button>
+        <span id="account-label" class="account-label" hidden></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="error-banner" class="banner banner-error" hidden></div>
+
+    <div id="network-warning" class="banner banner-warn" hidden>
+      <strong>Jaringan salah.</strong>
+      <span>Wallet Anda tidak di BNB Smart Chain (chain 56). Membeli dan me-listing butuh BSC.</span>
+      <button id="switch-network-btn" class="btn btn-small" type="button">Pindah ke BSC</button>
+    </div>
+
+    <div id="not-deployed-banner" class="banner banner-warn" hidden>
+      <strong>Marketplace belum dibuka.</strong>
+      <span>Kontrak market belum di-deploy ke mainnet. Deploy dijadwalkan setelah sale dibuka 1 Desember 2026 dan pass pertama ada. Halaman ini sudah siap — listing akan muncul otomatis setelah kontrak aktif.</span>
+    </div>
+
+    <section class="hero" aria-label="Tentang marketplace">
+      <img class="hero-img" src="https://zainumq.github.io/kong/kong-pass-tier1.jpg" alt="Kong Mint Pass — artwork Tier 1 Gold: King Kong berpakaian agen rahasia" width="360" height="360" />
+      <div class="intro">
+        <h2 class="hero-title">Jual beli pass, tanpa perantara.</h2>
+        <p>
+          Setiap Mint Pass adalah satu share sale $KONG. Di sini pass bisa
+          diperdagangkan sebelum diklaim: bayar dengan USDT atau BNB, harga
+          tetap, dan dana terbagi otomatis — penjual 94%, royalti 5% ke
+          treasury, fee marketplace 1%.
+        </p>
+        <p class="intro-note">
+          Non-custodial: pass tetap di wallet penjual selama ter-listing.
+          Penjual tetap bisa klaim atau refund kapan saja — listing yang
+          pass-nya sudah diklaim otomatis tidak bisa dibeli.
+        </p>
+        <p class="intro-note">
+          Harga listing tidak boleh di bawah floor tier-nya (sama dengan
+          harga mint): 1 / 1,5 / 2 USDT.
+        </p>
+      </div>
+    </section>
+
+    <section id="sale-section" aria-label="Status sale">
+      <div class="section-head">
+        <h2>Status sale</h2>
+        <span id="sale-state-pill" class="pill pill-muted">Memuat…</span>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h2>Share terjual</h2>
+          <p id="shares-status" class="big-status">—</p>
+          <div class="progress" aria-hidden="true"><div id="shares-bar" class="progress-bar"></div></div>
+          <p class="card-note" id="raised-note">Total terkumpul: —</p>
+        </div>
+        <div class="card">
+          <h2 id="countdown-label">Sale berakhir dalam</h2>
+          <p id="countdown" class="big-status">—</p>
+          <p class="card-note" id="countdown-note">Sale dibuka 1 Desember 2026, 00:00 WIB.</p>
+        </div>
+        <div class="card">
+          <h2 id="refund-label">Jendela refund</h2>
+          <p id="refund-countdown" class="big-status">—</p>
+          <p class="card-note" id="refund-note">Refund 100% hanya dibuka bila sale tidak terjual habis.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="listings-section" aria-label="Listing">
+      <div class="section-head">
+        <h2>Listing</h2>
+        <button id="refresh-listings-btn" class="btn btn-small" type="button">Muat ulang listing</button>
+      </div>
+      <p class="section-note">
+        Setiap listing diverifikasi live sebelum ditampilkan: penjual masih
+        pemilik pass, approval ke market masih berlaku, dan listing di
+        kontrak masih cocok. Listing yang sudah tidak valid disembunyikan.
+      </p>
+
+      <div class="filter-bar">
+        <label class="filter-label" for="filter-tier">Tier
+          <select id="filter-tier" class="text-input filter-select">
+            <option value="0">Semua tier</option>
+            <option value="1">Tier 1 — Gold</option>
+            <option value="2">Tier 2 — Silver</option>
+            <option value="3">Tier 3 — Bronze</option>
+          </select>
+        </label>
+        <label class="filter-label" for="filter-currency">Mata uang
+          <select id="filter-currency" class="text-input filter-select">
+            <option value="all">Semua</option>
+            <option value="USDT">USDT</option>
+            <option value="BNB">BNB</option>
+          </select>
+        </label>
+        <label class="filter-label" for="filter-sort">Urutkan harga
+          <select id="filter-sort" class="text-input filter-select">
+            <option value="asc">Termurah dulu</option>
+            <option value="desc">Termahal dulu</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="listings-count" class="muted-text"></p>
+      <p id="listings-note" class="muted-text"></p>
+      <div id="listing-grid" class="pass-grid"></div>
+      <p id="rates-note" class="muted-text rates-note"></p>
+    </section>
+
+    <div id="buy-confirm" class="confirm-box" hidden></div>
+    <div id="tx-status" class="tx-status" hidden></div>
+
+    <section id="my-passes-section" aria-label="Pass saya">
+      <div class="section-head">
+        <h2>Pass saya</h2>
+      </div>
+      <p id="my-passes-note" class="section-note">Hubungkan wallet untuk melihat pass Anda dan me-listingnya.</p>
+      <p id="my-passes-loading" class="muted-text" hidden>Memindai pass Anda…</p>
+      <div id="my-passes-grid" class="pass-grid"></div>
+    </section>
+
+    <section id="how-section" aria-label="Cara kerja">
+      <h2>Cara kerja</h2>
+      <ol class="steps">
+        <li><strong>List</strong> — approve kontrak market atas pass Anda, lalu tentukan harga (USDT atau BNB). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.</li>
+        <li><strong>Beli</strong> — untuk listing USDT, approve USDT sebesar harga dulu; untuk listing BNB, BNB dikirim bersama transaksi beli. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.</li>
+        <li><strong>Ubah / batal</strong> — penjual bisa mengubah harga atau membatalkan listing kapan saja (biaya gas saja).</li>
+        <li><strong>Klaim / refund</strong> — pemilik bisa klaim (setelah graduation) atau refund (bila sale gagal) kapan saja, bahkan saat pass ter-listing. Listing pass yang sudah dibakar otomatis tidak bisa dibeli.</li>
+      </ol>
+
+      <h3>Floor harga per tier</h3>
+      <table class="info-table">
+        <thead>
+          <tr><th>Tier</th><th>Floor USDT</th><th>Floor BNB (perkiraan)</th><th>Harga impas*</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tier 1 — Gold</td><td>1 USDT (≈ Rp18.266)</td><td>~0,0017 BNB (≈ Rp18.317)</td><td>1,064 USDT</td></tr>
+          <tr><td>Tier 2 — Silver</td><td>1,5 USDT (≈ Rp27.398)</td><td>~0,00254 BNB (≈ Rp27.368)</td><td>1,596 USDT</td></tr>
+          <tr><td>Tier 3 — Bronze</td><td>2 USDT (≈ Rp36.531)</td><td>~0,00339 BNB (≈ Rp36.526)</td><td>2,128 USDT</td></tr>
+        </tbody>
+      </table>
+      <p class="muted-text">* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%). Nilai rupiah memakai kurs acuan 19 Nov 2026 (1 USDT ≈ Rp18.265,5; 1 BNB ≈ Rp10.774.636). Floor BNB final ditetapkan saat deploy berdasarkan harga BNB saat itu.</p>
+
+      <h3>Contoh pembagian — penjualan 2 USDT (≈ Rp36.531)</h3>
+      <table class="info-table">
+        <thead>
+          <tr><th>Bagian</th><th>Besaran</th><th>Penerima</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Royalti</td><td>0,10 USDT (≈ Rp1.827)</td><td>Treasury</td></tr>
+          <tr><td>Fee marketplace</td><td>0,02 USDT (≈ Rp365)</td><td>Ditampung di kontrak market</td></tr>
+          <tr><td>Penjual terima</td><td>1,88 USDT (≈ Rp34.339)</td><td>Penjual</td></tr>
+        </tbody>
+      </table>
+
+      <div class="banner banner-warn">
+        <strong>Hati-hati approval palsu.</strong>
+        <span>Hanya approve alamat kontrak market resmi di bawah ini. Jangan pernah approve kontrak lain yang mengatasnamakan marketplace KONG — approval palsu bisa memindahkan pass Anda.</span>
+      </div>
+      <ul class="facts">
+        <li id="market-address-line"><strong>KongMarket:</strong> belum di-deploy</li>
+        <li><strong>KongMintPass:</strong> <a class="mono" href="https://bscscan.com/address/0x615AAaFF423f1005B7bF51e3dEC6BbF5958Af89B" target="_blank" rel="noopener">0x615AAaFF423f1005B7bF51e3dEC6BbF5958Af89B</a></li>
+        <li><strong>KongSale:</strong> <a class="mono" href="https://bscscan.com/address/0x2F3728AABD454530302B9d2B66e9986f3ac1A3e3" target="_blank" rel="noopener">0x2F3728AABD454530302B9d2B66e9986f3ac1A3e3</a></li>
+        <li><strong>USDT (BSC, 18 desimal):</strong> <a class="mono" href="https://bscscan.com/address/0x55d398326f99059fF775485246999027B3197955" target="_blank" rel="noopener">0x55d398326f99059fF775485246999027B3197955</a></li>
+        <li><strong>Treasury:</strong> <a class="mono" href="https://bscscan.com/address/0xed1A29F81a61029089Ad8D641670baD47bDced3A" target="_blank" rel="noopener">0xed1A29F81a61029089Ad8D641670baD47bDced3A</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul class="facts">
+        <li><strong>KongMarket:</strong> <a class="mono" id="footer-market" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>KongSale:</strong> <a class="mono" id="footer-sale" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>KongMintPass:</strong> <a class="mono" id="footer-pass" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>USDT:</strong> <a class="mono" id="footer-usdt" href="#" target="_blank" rel="noopener">—</a></li>
+      </ul>
+      <p>
+        Marketplace $KONG adalah frontend statis tanpa server — semua data
+        dibaca langsung dari BNB Chain. Kontrak market belum di-deploy;
+        halaman ini akan aktif otomatis setelah deploy mainnet.
+      </p>
+      <p class="footer-note">
+        Bukan nasihat keuangan. $KONG tidak punya nilai yang dijamin; pasar
+        secondary bisa sepi dan harga bisa bergerak cepat. Satu-satunya
+        jaminan di kontrak adalah refund 100% USDT bila sale tidak terjual
+        habis. Selalu periksa alamat kontrak di wallet sebelum menyetujui
+        transaksi apa pun.
+      </p>
+    </div>
+  </footer>
+
+  <noscript>
+    <p style="text-align:center;padding:2rem">Marketplace $KONG butuh JavaScript untuk membaca blockchain dan berbicara dengan wallet Anda.</p>
+  </noscript>
+  <script type="module" src="./market.js"></script>
+</body>
+</html>
