@@ -9,6 +9,10 @@
 // maxPrice) SAMA PERSIS dengan halaman mainnet — hanya wiring-nya yang
 // berbeda: impor dari ./market-testnet-config.js, chain 97, tanpa panel
 // sale (diganti panel token test), tanpa nilai rupiah di mana pun.
+//
+// Bahasa antarmuka: id/en/zh (lihat ./i18n.js) — pemilih bahasa di header,
+// preferensi tersimpan di localStorage. Semua string UI lewat t("kunci");
+// nama tier ("Tier 1 — Gold") sengaja tidak diterjemahkan.
 
 import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.13.5/+esm";
 import {
@@ -35,6 +39,7 @@ import {
   SORT_BNB_USD,
   TESTNET_PASS_SCAN_CAP,
 } from "./market-testnet-config.js";
+import { t, setLang, initLang, applyStaticI18n, numLocale } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const shortAddress = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -57,19 +62,20 @@ const isKnownCurrency = (paymentToken) =>
   isUsdt(paymentToken) || isBnb(paymentToken);
 
 // ---------------------------------------------------------------------------
-// Format angka (id-ID, mengikuti cara user menulis angka: koma desimal)
+// Format angka mengikuti bahasa aktif (id-ID: koma desimal;
+// en-US/zh-CN: titik desimal).
 // ---------------------------------------------------------------------------
 
-const fmtInt = (n) => Number(n).toLocaleString("id-ID");
+const fmtInt = (n) => Number(n).toLocaleString(numLocale());
 const fmtKong = (value) =>
-  `${Number(ethers.formatUnits(value, 18)).toLocaleString("id-ID")} KONG`;
+  `${Number(ethers.formatUnits(value, 18)).toLocaleString(numLocale())} KONG`;
 const fmtUsdt = (value, decimals = 18) =>
-  `${Number(ethers.formatUnits(value, decimals)).toLocaleString("id-ID", {
+  `${Number(ethers.formatUnits(value, decimals)).toLocaleString(numLocale(), {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} USDT`;
 const fmtBnb = (value) =>
-  `${Number(ethers.formatUnits(value, 18)).toLocaleString("id-ID", {
+  `${Number(ethers.formatUnits(value, 18)).toLocaleString(numLocale(), {
     maximumFractionDigits: 6,
   })} BNB`;
 const fmtPrice = (price, paymentToken) =>
@@ -153,7 +159,7 @@ async function withReadProvider(fn) {
       lastError = err;
     }
   }
-  throw lastError ?? new Error("Semua endpoint RPC BSC gagal.");
+  throw lastError ?? new Error(t("rpcAllFailed"));
 }
 
 // ---------------------------------------------------------------------------
@@ -232,7 +238,7 @@ function breakevenRaw(tier, currency) {
 async function connectWallet() {
   if (!window.ethereum) {
     showError(
-      "Wallet tidak ditemukan. Pasang MetaMask atau Binance Wallet, lalu muat ulang halaman ini."
+      t("walletNotFound")
     );
     return;
   }
@@ -279,12 +285,12 @@ function updateWalletUI() {
   const btn = $("connect-btn");
   const label = $("account-label");
   if (account) {
-    btn.textContent = "Putuskan";
+    btn.textContent = t("disconnectBtn");
     btn.classList.remove("btn-primary");
     label.textContent = shortAddress(account);
     label.hidden = false;
   } else {
-    btn.textContent = "Hubungkan wallet";
+    btn.textContent = t("connectBtn");
     btn.classList.add("btn-primary");
     label.hidden = true;
   }
@@ -301,11 +307,11 @@ function updateNetworkUI() {
   }
   pill.hidden = false;
   if (walletChainId === CHAIN_ID) {
-    pill.textContent = "BSC Testnet · Chain 97";
+    pill.textContent = t("networkOk");
     pill.className = "pill pill-ok";
     warning.hidden = true;
   } else {
-    pill.textContent = `Jaringan salah (chain ${walletChainId})`;
+    pill.textContent = t("networkWrong", { chain: walletChainId });
     pill.className = "pill pill-warn";
     warning.hidden = false;
   }
@@ -415,23 +421,23 @@ function renderTestnetPanel() {
   remainingEl.textContent =
     testnet.dispenserRemaining === null
       ? "—"
-      : `${fmtInt(testnet.dispenserRemaining)} pass tersisa`;
+      : t("passRemaining", { n: testnet.dispenserRemaining });
 
   const usdtEl = $("testnet-usdt-balance");
   usdtEl.textContent = !account
-    ? "Hubungkan wallet untuk melihat saldo."
+    ? t("connectToSeeBalance")
     : testnet.usdtBalance === null
       ? "—"
       : fmtUsdt(testnet.usdtBalance, usdtDecimals);
 
   const passEl = $("testnet-pass-status");
   passEl.textContent = !account
-    ? "Hubungkan wallet untuk klaim test pass."
+    ? t("connectToClaimPass")
     : testnet.alreadyClaimed === null
       ? "—"
       : testnet.alreadyClaimed
-        ? "✓ Anda sudah klaim test pass (1 per wallet)."
-        : "Anda belum klaim test pass.";
+        ? t("alreadyClaimedPass")
+        : t("notClaimedPass");
 
   const mintBtn = $("mint-usdt-btn");
   mintBtn.disabled = busy || !account;
@@ -442,11 +448,11 @@ function renderTestnetPanel() {
     testnet.alreadyClaimed === true ||
     testnet.dispenserRemaining === 0;
   if (testnet.dispenserRemaining === 0) {
-    claimBtn.textContent = "Stok test pass habis";
+    claimBtn.textContent = t("stockEmptyBtn");
   } else if (testnet.alreadyClaimed) {
-    claimBtn.textContent = "Test pass sudah diklaim";
+    claimBtn.textContent = t("claimedBtn");
   } else {
-    claimBtn.textContent = "Klaim test pass gratis";
+    claimBtn.textContent = t("claimBtn");
   }
 }
 
@@ -462,9 +468,9 @@ async function mintTestUsdt() {
     await write.mint.staticCall(account, amount);
     const tx = await write.mint(account, amount);
     setTxStatus([
-      [{ text: "Mint 100 test USDT… menunggu konfirmasi. " }],
+      [{ text: t("mintUsdtPending") }],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -472,18 +478,18 @@ async function mintTestUsdt() {
     setTxStatus([
       [
         {
-          text: "✓ 100 test USDT sudah masuk ke wallet Anda. Test USDT ini tidak bernilai — hanya untuk mencoba marketplace testnet. ",
+          text: t("mintUsdtDone"),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
     await refreshTestnetPanel();
     await refreshWallet();
   } catch (err) {
-    setTxStatus([[{ text: `✗ Mint test USDT gagal: ${friendlyError(err)}` }]]);
+    setTxStatus([[{ text: t("mintUsdtFailed", { err: friendlyError(err) }) }]]);
   } finally {
     setBusy(false);
   }
@@ -500,9 +506,9 @@ async function claimTestPass() {
     await write.claim.staticCall();
     const tx = await write.claim();
     setTxStatus([
-      [{ text: "Klaim test pass… menunggu konfirmasi. " }],
+      [{ text: t("claimPending") }],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -530,19 +536,19 @@ async function claimTestPass() {
         {
           text:
             claimedId !== null
-              ? `✓ Test pass #${claimedId} sudah masuk ke wallet Anda. Sekarang Anda bisa me-listingnya di bawah. `
-              : "✓ Test pass sudah masuk ke wallet Anda. Cek di bagian “Pass saya”. ",
+              ? t("claimDoneWithId", { id: claimedId })
+              : t("claimDone"),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
     await refreshTestnetPanel();
     await refreshWallet();
   } catch (err) {
-    setTxStatus([[{ text: `✗ Klaim test pass gagal: ${friendlyError(err)}` }]]);
+    setTxStatus([[{ text: t("claimFailed", { err: friendlyError(err) }) }]]);
   } finally {
     setBusy(false);
   }
@@ -668,11 +674,11 @@ function renderListings() {
   if (!MARKET_DEPLOYED) {
     countEl.textContent = "";
     noteEl.textContent =
-      "Listing akan muncul di sini setelah kontrak market di-deploy dan ada pass yang di-listing.";
+      t("marketNotDeployedNote");
     const p = document.createElement("p");
     p.className = "empty-note";
     p.textContent =
-      "Marketplace testnet belum dibuka — kontrak market belum di-deploy ke BSC Testnet.";
+      t("marketNotDeployedEmpty");
     grid.appendChild(p);
     return;
   }
@@ -682,7 +688,7 @@ function renderListings() {
     noteEl.textContent = "";
     const p = document.createElement("p");
     p.className = "empty-note";
-    p.textContent = "Memuat listing dari blockchain…";
+    p.textContent = t("loadingListings");
     grid.appendChild(p);
     return;
   }
@@ -692,7 +698,7 @@ function renderListings() {
     noteEl.textContent = "";
     const p = document.createElement("p");
     p.className = "empty-note";
-    p.textContent = `Listing tidak bisa dimuat: ${friendlyError(listingsError)} Coba muat ulang dengan tombol di atas.`;
+    p.textContent = t("listingsLoadFailed", { err: friendlyError(listingsError) });
     grid.appendChild(p);
     return;
   }
@@ -700,17 +706,17 @@ function renderListings() {
   const list = filteredListings();
   countEl.textContent =
     verified.length === 0
-      ? "Belum ada listing."
-      : `Menampilkan ${list.length} dari ${verified.length} listing aktif.`;
+      ? t("noListings")
+      : t("showingListings", { shown: list.length, total: verified.length });
   const notes = [];
   if (staleCount > 0) {
     notes.push(
-      `${staleCount} listing disembunyikan karena sudah tidak valid (pass diklaim/dipindah atau approval dicabut).`
+      t("staleHidden", { n: staleCount })
     );
   }
   if (listingsSource === "rpc") {
     notes.push(
-      "Data listing diambil lewat RPC (BscScan tidak bisa dijangkau) — bisa lebih lambat."
+      t("rpcFallbackNote")
     );
   }
   noteEl.textContent = notes.join(" ");
@@ -720,8 +726,8 @@ function renderListings() {
     p.className = "empty-note";
     p.textContent =
       verified.length === 0
-        ? "Belum ada pass yang di-listing. Jadilah yang pertama — hubungkan wallet dan list pass Anda di bawah."
-        : "Tidak ada listing yang cocok dengan filter ini.";
+        ? t("noListingsYet")
+        : t("noFilterMatch");
     grid.appendChild(p);
     return;
   }
@@ -761,12 +767,12 @@ function buildListingCard(listing) {
 
   const idrLine = document.createElement("p");
   idrLine.className = "listing-idr";
-  idrLine.textContent = "Testnet — token tanpa nilai";
+  idrLine.textContent = t("testnetNoValue");
   body.appendChild(idrLine);
 
   const claimLine = document.createElement("p");
   claimLine.className = "pass-value";
-  claimLine.textContent = `Nilai klaim (simulasi): ${fmtKong(listing.claimable)}`;
+  claimLine.textContent = t("claimValueSim", { value: fmtKong(listing.claimable) });
   body.appendChild(claimLine);
 
   const sellerLine = document.createElement("p");
@@ -774,14 +780,14 @@ function buildListingCard(listing) {
   sellerLink.href = bscscanAddress(listing.seller);
   sellerLink.target = "_blank";
   sellerLink.rel = "noopener";
-  sellerLink.textContent = `Penjual: ${shortAddress(listing.seller)}`;
+  sellerLink.textContent = t("sellerLabel", { addr: shortAddress(listing.seller) });
   sellerLine.appendChild(sellerLink);
   body.appendChild(sellerLine);
 
   const splitLine = document.createElement("p");
   splitLine.className = "listing-split";
   splitLine.textContent =
-    "Pembagian: penjual 94% · royalti 5% ke treasury · fee market 1%";
+    t("splitLine");
   body.appendChild(splitLine);
 
   const linkLine = document.createElement("p");
@@ -789,7 +795,7 @@ function buildListingCard(listing) {
   a.href = bscscanToken(listing.tokenId);
   a.target = "_blank";
   a.rel = "noopener";
-  a.textContent = "Lihat di BscScan";
+  a.textContent = t("viewBscScan");
   linkLine.appendChild(a);
   body.appendChild(linkLine);
 
@@ -797,23 +803,23 @@ function buildListingCard(listing) {
     const warn = document.createElement("p");
     warn.className = "listing-stale-note";
     warn.textContent =
-      "Listing ini belum bisa diverifikasi (RPC tidak menjawab) — tombol Beli dinonaktifkan sampai verifikasi berhasil.";
+      t("listingUnverified");
     body.appendChild(warn);
   } else if (!account) {
     const hint = document.createElement("p");
     hint.className = "listing-hint";
-    hint.textContent = "Hubungkan wallet untuk membeli.";
+    hint.textContent = t("connectToBuy");
     body.appendChild(hint);
   } else if (listing.seller.toLowerCase() === account.toLowerCase()) {
     const hint = document.createElement("p");
     hint.className = "listing-hint";
-    hint.textContent = "Ini listing Anda — kelola di bagian “Pass saya”.";
+    hint.textContent = t("ownListingHint");
     body.appendChild(hint);
   } else {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn btn-primary btn-small";
-    btn.textContent = "Beli";
+    btn.textContent = t("buyBtn");
     btn.disabled = busy;
     btn.addEventListener("click", () => startBuy(listing));
     body.appendChild(btn);
@@ -840,9 +846,10 @@ async function startBuy(listing) {
       setTxStatus([
         [
           {
-            text: `Listing Pass #${listing.tokenId} sudah tidak valid: ${
-              check.reason ?? "tidak bisa diverifikasi saat ini."
-            } Daftar listing dimuat ulang.`,
+            text: t("listingStale", {
+              id: listing.tokenId,
+              reason: check.reason ?? t("cannotVerifyNow"),
+            }),
           },
         ],
       ]);
@@ -875,7 +882,7 @@ async function startBuy(listing) {
     renderBuyConfirm();
     $("buy-confirm").scrollIntoView({ behavior: "smooth", block: "center" });
   } catch (err) {
-    setTxStatus([[{ text: `Gagal memeriksa listing: ${friendlyError(err)}` }]]);
+    setTxStatus([[{ text: t("verifyFailed", { err: friendlyError(err) }) }]]);
   } finally {
     setBusy(false);
   }
@@ -893,19 +900,19 @@ function renderBuyConfirm() {
 
   const meta = tierMeta(pendingBuy.tier);
   const title = document.createElement("h3");
-  title.textContent = `Konfirmasi pembelian — Pass #${pendingBuy.tokenId} (${meta.name})`;
+  title.textContent = t("buyConfirmTitle", { id: pendingBuy.tokenId, tier: meta.name });
   box.appendChild(title);
 
   const quote = document.createElement("div");
   quote.className = "quote-box";
   const rows = [
-    ["Harga yang Anda bayar", fmtPrice(pendingBuy.price, pendingBuy.paymentToken)],
-    ["Batas harga maksimum (proteksi)", fmtPrice(pendingBuy.price, pendingBuy.paymentToken)],
-    ["Penjual terima (94%)", fmtPrice(pendingBuy.sellerGets, pendingBuy.paymentToken)],
-    ["Royalti ke treasury (5%)", fmtPrice(pendingBuy.royalty, pendingBuy.paymentToken)],
-    ["Fee marketplace (1%, ditampung)", fmtPrice(pendingBuy.fee, pendingBuy.paymentToken)],
-    ["Klaim setelah graduation", fmtKong(pendingBuy.claimable)],
-    ["Penjual", shortAddress(pendingBuy.seller)],
+    [t("quotePrice"), fmtPrice(pendingBuy.price, pendingBuy.paymentToken)],
+    [t("quoteMaxPrice"), fmtPrice(pendingBuy.price, pendingBuy.paymentToken)],
+    [t("quoteSellerGets"), fmtPrice(pendingBuy.sellerGets, pendingBuy.paymentToken)],
+    [t("quoteRoyalty"), fmtPrice(pendingBuy.royalty, pendingBuy.paymentToken)],
+    [t("quoteFee"), fmtPrice(pendingBuy.fee, pendingBuy.paymentToken)],
+    [t("quoteClaim"), fmtKong(pendingBuy.claimable)],
+    [t("quoteSeller"), shortAddress(pendingBuy.seller)],
   ];
   for (const [label, value] of rows) {
     const row = document.createElement("div");
@@ -923,14 +930,14 @@ function renderBuyConfirm() {
   const note = document.createElement("p");
   note.className = "muted-text";
   note.textContent = isUsdt(pendingBuy.paymentToken)
-    ? "Pembayaran USDT: bila allowance belum cukup, Anda akan diminta menyetujui (approve) USDT sebesar harga dulu — lalu transaksi beli menyusul. Keduanya perlu konfirmasi di wallet."
-    : "Pembayaran BNB: BNB sebesar harga dikirim bersama transaksi beli — tanpa approve terpisah.";
+    ? t("payUsdtNote")
+    : t("payBnbNote");
   box.appendChild(note);
 
   const warn = document.createElement("p");
   warn.className = "muted-text";
   warn.textContent =
-    "Pembelian dilindungi batas harga maksimum: bila harga listing berubah naik di atas harga di atas sebelum transaksi diproses, transaksi dibatalkan otomatis dan Anda tidak membayar lebih. Listing diverifikasi ulang tepat sebelum transaksi dikirim.";
+    t("maxPriceWarn");
   box.appendChild(warn);
 
   const actions = document.createElement("div");
@@ -939,16 +946,15 @@ function renderBuyConfirm() {
   confirmBtn.id = "buy-confirm-btn";
   confirmBtn.type = "button";
   confirmBtn.className = "btn btn-primary";
-  confirmBtn.textContent = `Konfirmasi beli — ${fmtPrice(
-    pendingBuy.price,
-    pendingBuy.paymentToken
-  )}`;
+  confirmBtn.textContent = t("confirmBuyBtn", {
+    price: fmtPrice(pendingBuy.price, pendingBuy.paymentToken),
+  });
   confirmBtn.disabled = busy;
   confirmBtn.addEventListener("click", confirmBuy);
   const cancelBtn = document.createElement("button");
   cancelBtn.type = "button";
   cancelBtn.className = "btn";
-  cancelBtn.textContent = "Batal";
+  cancelBtn.textContent = t("cancelBtn");
   cancelBtn.disabled = busy;
   cancelBtn.addEventListener("click", () => {
     pendingBuy = null;
@@ -989,14 +995,13 @@ async function confirmBuy() {
         setTxStatus([
           [
             {
-              text: `Menyetujui (approve) ${fmtUsdt(
-                listing.price,
-                usdtDecimals
-              )} untuk kontrak market… menunggu konfirmasi. `,
+              text: t("approveUsdtPending", {
+                amount: fmtUsdt(listing.price, usdtDecimals),
+              }),
             },
           ],
           [
-            { text: "Transaksi: " },
+            { text: t("txLabel") },
             { text: shortAddress(approveTx.hash), href: bscscanTx(approveTx.hash) },
           ],
         ]);
@@ -1017,9 +1022,9 @@ async function confirmBuy() {
       });
     }
     setTxStatus([
-      [{ text: `Membeli Pass #${listing.tokenId}… menunggu konfirmasi. ` }],
+      [{ text: t("buyingPending", { id: listing.tokenId }) }],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -1029,14 +1034,14 @@ async function confirmBuy() {
     setTxStatus([
       [
         {
-          text: `✓ Pass #${listing.tokenId} berhasil dibeli seharga ${fmtPrice(
-            listing.price,
-            listing.paymentToken
-          )}. Pass kini ada di wallet Anda. `,
+          text: t("buyDone", {
+            id: listing.tokenId,
+            price: fmtPrice(listing.price, listing.paymentToken),
+          }),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -1044,7 +1049,7 @@ async function confirmBuy() {
     await refreshWallet();
   } catch (err) {
     setTxStatus([
-      [{ text: `✗ Pembelian gagal: ${friendlyError(err)}` }],
+      [{ text: t("buyFailed", { err: friendlyError(err) }) }],
     ]);
     // Listing bisa saja sudah berubah — muat ulang agar grid tidak basi.
     if (err && err.message === "LISTING_STALE") await loadListings();
@@ -1071,7 +1076,7 @@ async function refreshWallet() {
     wallet.bnbBalance = bnbBalance;
   } catch {
     showError(
-      "Tidak bisa membaca status wallet dari BSC Testnet. Periksa koneksi Anda dan coba lagi."
+      t("walletReadFailed")
     );
   }
   await refreshMyPasses();
@@ -1210,7 +1215,7 @@ async function refreshMyPasses() {
     wallet.passes = await findOwnedPasses();
   } catch {
     showError(
-      "Tidak bisa memuat pass Anda dari BSC Testnet. Periksa koneksi Anda dan coba lagi."
+      t("myPassesLoadFailed")
     );
     wallet.passes = [];
   }
@@ -1224,30 +1229,30 @@ function renderMyPasses() {
   grid.replaceChildren();
 
   if (!account) {
-    note.textContent = "Hubungkan wallet untuk melihat pass Anda dan me-listingnya.";
+    note.textContent = t("connectToSeePassesNote");
     const p = document.createElement("p");
     p.className = "empty-note";
-    p.textContent = "Hubungkan wallet untuk melihat pass Anda.";
+    p.textContent = t("connectToSeePasses");
     grid.appendChild(p);
     return;
   }
   if (wallet.passes.length === 0) {
     note.textContent =
       wallet.passBalance === 0
-        ? "Anda belum memiliki test pass — klaim gratis di bagian “Token test” di atas, atau beli listing di marketplace ini."
-        : "Memindai pass Anda…";
+        ? t("noTestPassNote")
+        : t("scanningPasses");
     const p = document.createElement("p");
     p.className = "empty-note";
     p.textContent =
       wallet.passBalance === 0
-        ? "Anda belum memiliki Mint Pass."
-        : "Memindai pass Anda dari blockchain…";
+        ? t("noMintPass")
+        : t("scanningPassesChain");
     grid.appendChild(p);
     return;
   }
   note.textContent = MARKET_DEPLOYED
-    ? `Anda memegang ${wallet.passes.length} test pass. Listing bersifat non-custodial: pass tetap di wallet Anda, Anda hanya memberi approval ke kontrak market — sampai terjual.`
-    : `Anda memegang ${wallet.passes.length} pass. Listing dibuka setelah kontrak market di-deploy.`;
+    ? t("holdingPasses", { n: wallet.passes.length })
+    : t("holdingPassesNotDeployed", { n: wallet.passes.length });
 
   for (const pass of wallet.passes) {
     grid.appendChild(buildMyPassCard(pass));
@@ -1279,7 +1284,7 @@ function buildMyPassCard(pass) {
 
   const claimLine = document.createElement("p");
   claimLine.className = "pass-value";
-  claimLine.textContent = `Nilai klaim (simulasi): ${fmtKong(pass.claimable)}`;
+  claimLine.textContent = t("claimValueSim", { value: fmtKong(pass.claimable) });
   body.appendChild(claimLine);
 
   const linkLine = document.createElement("p");
@@ -1287,14 +1292,14 @@ function buildMyPassCard(pass) {
   a.href = bscscanToken(pass.tokenId);
   a.target = "_blank";
   a.rel = "noopener";
-  a.textContent = "Lihat di BscScan";
+  a.textContent = t("viewBscScan");
   linkLine.appendChild(a);
   body.appendChild(linkLine);
 
   if (!MARKET_DEPLOYED) {
     const hint = document.createElement("p");
     hint.className = "listing-hint";
-    hint.textContent = "Listing dibuka setelah kontrak market di-deploy.";
+    hint.textContent = t("listingOpensAfterDeploy");
     body.appendChild(hint);
   } else if (pass.listed) {
     body.appendChild(buildListedControls(pass));
@@ -1305,7 +1310,7 @@ function buildMyPassCard(pass) {
   const claimLink = document.createElement("p");
   const claimA = document.createElement("a");
   claimA.href = "#test-tokens";
-  claimA.textContent = "Dapatkan test pass gratis ↑";
+  claimA.textContent = t("getFreeTestPass");
   claimLink.appendChild(claimA);
   body.appendChild(claimLink);
 
@@ -1320,22 +1325,24 @@ function buildListedControls(pass) {
 
   const status = document.createElement("p");
   status.className = "listing-status";
-  status.textContent = `Ter-listing: ${fmtPrice(
-    pass.listingPrice,
-    pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-  )}`;
+  status.textContent = t("listedPrice", {
+    price: fmtPrice(
+      pass.listingPrice,
+      pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
+    ),
+  });
   wrap.appendChild(status);
 
   if (!pass.approved) {
     const warn = document.createElement("p");
     warn.className = "listing-stale-note";
     warn.textContent =
-      "Perhatian: approval pass ini ke market sudah tidak berlaku — listing tidak bisa dibeli sampai Anda approve ulang.";
+      t("approvalStaleWarn");
     wrap.appendChild(warn);
     const approveBtn = document.createElement("button");
     approveBtn.type = "button";
     approveBtn.className = "btn btn-small";
-    approveBtn.textContent = "Approve ulang";
+    approveBtn.textContent = t("reapproveBtn");
     approveBtn.disabled = busy;
     approveBtn.addEventListener("click", () => approvePass(pass.tokenId));
     wrap.appendChild(approveBtn);
@@ -1343,7 +1350,7 @@ function buildListedControls(pass) {
 
   const label = document.createElement("label");
   label.className = "list-label";
-  label.textContent = `Harga baru (${pass.listingCurrency})`;
+  label.textContent = t("newPriceLabel", { currency: pass.listingCurrency });
   wrap.appendChild(label);
 
   const input = document.createElement("input");
@@ -1362,13 +1369,15 @@ function buildListedControls(pass) {
   const floorNote = document.createElement("p");
   floorNote.className = "floor-note";
   const floor = floorRaw(pass.tier, pass.listingCurrency);
-  floorNote.textContent = `Floor ${meta_name(pass.tier)}: ${
-    pass.listingCurrency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor)
-  } · Harga impas: ${
-    pass.listingCurrency === "USDT"
-      ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
-      : fmtBnb(breakevenRaw(pass.tier, "BNB"))
-  }`;
+  floorNote.textContent = t("floorNote", {
+    tier: meta_name(pass.tier),
+    floor:
+      pass.listingCurrency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
+    breakeven:
+      pass.listingCurrency === "USDT"
+        ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
+        : fmtBnb(breakevenRaw(pass.tier, "BNB")),
+  });
   wrap.appendChild(floorNote);
 
   const errNote = document.createElement("p");
@@ -1381,7 +1390,7 @@ function buildListedControls(pass) {
   const updateBtn = document.createElement("button");
   updateBtn.type = "button";
   updateBtn.className = "btn btn-primary btn-small";
-  updateBtn.textContent = "Ubah harga";
+  updateBtn.textContent = t("updatePriceBtn");
   updateBtn.disabled = busy;
   updateBtn.addEventListener("click", () =>
     updatePriceFlow(pass, input.value, errNote)
@@ -1389,7 +1398,7 @@ function buildListedControls(pass) {
   const cancelBtn = document.createElement("button");
   cancelBtn.type = "button";
   cancelBtn.className = "btn btn-small";
-  cancelBtn.textContent = "Batalkan listing";
+  cancelBtn.textContent = t("cancelListingBtn");
   cancelBtn.disabled = busy;
   cancelBtn.addEventListener("click", () => cancelListingFlow(pass));
   actions.appendChild(updateBtn);
@@ -1406,7 +1415,7 @@ function buildListForm(pass) {
 
   const label = document.createElement("label");
   label.className = "list-label";
-  label.textContent = "Harga jual";
+  label.textContent = t("sellPriceLabel");
   wrap.appendChild(label);
 
   const row = document.createElement("div");
@@ -1415,7 +1424,7 @@ function buildListForm(pass) {
   input.className = "text-input list-input";
   input.type = "text";
   input.inputMode = "decimal";
-  input.placeholder = "cth: 2";
+  input.placeholder = t("pricePlaceholder");
   input.autocomplete = "off";
   input.spellcheck = false;
   const draftKey = `list-${pass.tokenId}`;
@@ -1440,15 +1449,14 @@ function buildListForm(pass) {
     const cur = select.value;
     const floor = floorRaw(pass.tier, cur);
     const token = cur === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS;
-    floorNote.textContent =
-      `Floor ${meta_name(pass.tier)}: ${
-        cur === "USDT" ? fmtUsdt(floor) : fmtBnb(floor)
-      } · ` +
-      `Harga impas (terima bersih = harga mint): ${
+    floorNote.textContent = t("floorNoteList", {
+      tier: meta_name(pass.tier),
+      floor: cur === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
+      breakeven:
         cur === "USDT"
           ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
-          : fmtBnb(breakevenRaw(pass.tier, "BNB"))
-      } · Potongan per penjualan: royalti 5% + fee 1%.`;
+          : fmtBnb(breakevenRaw(pass.tier, "BNB")),
+    });
   };
   select.addEventListener("change", () => {
     currencyDrafts.set(draftKey, select.value);
@@ -1465,7 +1473,7 @@ function buildListForm(pass) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "btn btn-primary btn-small";
-  btn.textContent = "List pass";
+  btn.textContent = t("listPassBtn");
   btn.disabled = busy;
   btn.addEventListener("click", () =>
     listPassFlow(pass, input.value, select.value, errNote)
@@ -1514,15 +1522,15 @@ async function approvePass(tokenId) {
       approvedForAll
     ) {
       setTxStatus([
-        [{ text: `Pass #${tokenId} sudah di-approve ke kontrak market.` }],
+        [{ text: t("passApprovedAlready", { id: tokenId }) }],
       ]);
       return;
     }
     const tx = await write.approve(MARKET_ADDRESS, tokenId);
     setTxStatus([
-      [{ text: `Approve Pass #${tokenId} ke kontrak market… menunggu konfirmasi. ` }],
+      [{ text: t("approvePending", { id: tokenId }) }],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -1530,18 +1538,18 @@ async function approvePass(tokenId) {
     setTxStatus([
       [
         {
-          text: `✓ Pass #${tokenId} sudah di-approve ke kontrak market. Listing Anda kini bisa dibeli. `,
+          text: t("approveDone", { id: tokenId }),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
     await refreshMyPasses();
     await loadListings();
   } catch (err) {
-    setTxStatus([[{ text: `✗ Approve gagal: ${friendlyError(err)}` }]]);
+    setTxStatus([[{ text: t("approveFailed", { err: friendlyError(err) }) }]]);
   } finally {
     setBusy(false);
   }
@@ -1552,16 +1560,17 @@ async function listPassFlow(pass, rawPrice, currency, errNote) {
   errNote.hidden = true;
   const price = parsePriceInput(rawPrice);
   if (price === null || price <= 0n) {
-    showFormError(errNote, "Harga tidak valid — isi angka, mis. 2 atau 1,5.");
+    showFormError(errNote, t("invalidPrice"));
     return;
   }
   const floor = floorRaw(pass.tier, currency);
   if (price < floor) {
     showFormError(
       errNote,
-      `Harga di bawah floor ${meta_name(pass.tier)}: minimum ${
-        currency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor)
-      }.`
+      t("belowFloor", {
+        tier: meta_name(pass.tier),
+        min: currency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
+      })
     );
     return;
   }
@@ -1590,11 +1599,11 @@ async function listPassFlow(pass, rawPrice, currency, errNote) {
       setTxStatus([
         [
           {
-            text: `Approve Pass #${pass.tokenId} ke kontrak market… menunggu konfirmasi. `,
+            text: t("approvePending", { id: pass.tokenId }),
           },
         ],
         [
-          { text: "Transaksi: " },
+          { text: t("txLabel") },
           { text: shortAddress(approveTx.hash), href: bscscanTx(approveTx.hash) },
         ],
       ]);
@@ -1607,14 +1616,14 @@ async function listPassFlow(pass, rawPrice, currency, errNote) {
     setTxStatus([
       [
         {
-          text: `Listing Pass #${pass.tokenId} seharga ${fmtPrice(
-            price,
-            paymentToken
-          )}… menunggu konfirmasi. `,
+          text: t("listingPending", {
+            id: pass.tokenId,
+            price: fmtPrice(price, paymentToken),
+          }),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -1623,21 +1632,21 @@ async function listPassFlow(pass, rawPrice, currency, errNote) {
     setTxStatus([
       [
         {
-          text: `✓ Pass #${pass.tokenId} ter-listing seharga ${fmtPrice(
-            price,
-            paymentToken
-          )}. Anda tetap memegang pass sampai terjual. `,
+          text: t("listingDone", {
+            id: pass.tokenId,
+            price: fmtPrice(price, paymentToken),
+          }),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
     await loadListings();
     await refreshMyPasses();
   } catch (err) {
-    setTxStatus([[{ text: `✗ Listing gagal: ${friendlyError(err)}` }]]);
+    setTxStatus([[{ text: t("listingFailed", { err: friendlyError(err) }) }]]);
   } finally {
     setBusy(false);
   }
@@ -1648,16 +1657,20 @@ async function updatePriceFlow(pass, rawPrice, errNote) {
   errNote.hidden = true;
   const price = parsePriceInput(rawPrice);
   if (price === null || price <= 0n) {
-    showFormError(errNote, "Harga tidak valid — isi angka, mis. 2 atau 1,5.");
+    showFormError(errNote, t("invalidPrice"));
     return;
   }
   const floor = floorRaw(pass.tier, pass.listingCurrency);
   if (price < floor) {
     showFormError(
       errNote,
-      `Harga di bawah floor ${meta_name(pass.tier)}: minimum ${
-        pass.listingCurrency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor)
-      }.`
+      t("belowFloor", {
+        tier: meta_name(pass.tier),
+        min:
+          pass.listingCurrency === "USDT"
+            ? fmtUsdt(floor)
+            : fmtBnb(floor),
+      })
     );
     return;
   }
@@ -1671,14 +1684,17 @@ async function updatePriceFlow(pass, rawPrice, errNote) {
     setTxStatus([
       [
         {
-          text: `Mengubah harga Pass #${pass.tokenId} menjadi ${fmtPrice(
-            price,
-            pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-          )}… menunggu konfirmasi. `,
+          text: t("updatePricePending", {
+            id: pass.tokenId,
+            price: fmtPrice(
+              price,
+              pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
+            ),
+          }),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -1687,21 +1703,24 @@ async function updatePriceFlow(pass, rawPrice, errNote) {
     setTxStatus([
       [
         {
-          text: `✓ Harga Pass #${pass.tokenId} diubah menjadi ${fmtPrice(
-            price,
-            pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-          )}. `,
+          text: t("updatePriceDone", {
+            id: pass.tokenId,
+            price: fmtPrice(
+              price,
+              pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
+            ),
+          }),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
     await loadListings();
     await refreshMyPasses();
   } catch (err) {
-    setTxStatus([[{ text: `✗ Ubah harga gagal: ${friendlyError(err)}` }]]);
+    setTxStatus([[{ text: t("updatePriceFailed", { err: friendlyError(err) }) }]]);
   } finally {
     setBusy(false);
   }
@@ -1711,7 +1730,7 @@ async function cancelListingFlow(pass) {
   if (busy || !account) return;
   if (
     !window.confirm(
-      `Batalkan listing Pass #${pass.tokenId}? Pass tetap di wallet Anda; pembatalan hanya menghapus listing (biaya gas saja).`
+      t("cancelConfirm", { id: pass.tokenId })
     )
   ) {
     return;
@@ -1724,9 +1743,9 @@ async function cancelListingFlow(pass) {
     await write.cancel.staticCall(pass.tokenId);
     const tx = await write.cancel(pass.tokenId);
     setTxStatus([
-      [{ text: `Membatalkan listing Pass #${pass.tokenId}… menunggu konfirmasi. ` }],
+      [{ text: t("cancelPending", { id: pass.tokenId }) }],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
@@ -1734,25 +1753,25 @@ async function cancelListingFlow(pass) {
     setTxStatus([
       [
         {
-          text: `✓ Listing Pass #${pass.tokenId} dibatalkan. Pass tetap di wallet Anda. `,
+          text: t("cancelDone", { id: pass.tokenId }),
         },
       ],
       [
-        { text: "Transaksi: " },
+        { text: t("txLabel") },
         { text: shortAddress(tx.hash), href: bscscanTx(tx.hash) },
       ],
     ]);
     await loadListings();
     await refreshMyPasses();
   } catch (err) {
-    setTxStatus([[{ text: `✗ Pembatalan gagal: ${friendlyError(err)}` }]]);
+    setTxStatus([[{ text: t("cancelFailed", { err: friendlyError(err) }) }]]);
   } finally {
     setBusy(false);
   }
 }
 
 // ---------------------------------------------------------------------------
-// Pesan error dalam Bahasa Indonesia
+// Pesan error (diterjemahkan lewat i18n — lihat ./i18n.js)
 // ---------------------------------------------------------------------------
 
 function friendlyError(err) {
@@ -1760,47 +1779,47 @@ function friendlyError(err) {
   const code = err && err.code;
 
   if (msg === "WRONG_NETWORK") {
-    return "Wallet Anda tidak di BSC Testnet (chain 97). Pindah jaringan dan coba lagi.";
+    return t("errWrongNetwork");
   }
   if (msg === "LISTING_STALE") {
-    return "Listing ini sudah tidak valid (pass dipindah, diklaim, atau approval dicabut).";
+    return t("errListingStale");
   }
   if (msg === "SELF_PURCHASE") {
-    return "Anda tidak bisa membeli listing Anda sendiri.";
+    return t("errSelfPurchase");
   }
   if (msg === "BLOK_DEPLOY_BELUM_DIISI") {
-    return "Blok deploy kontrak market belum diisi di konfigurasi — fallback RPC tidak bisa berjalan.";
+    return t("errDeployBlockMissing");
   }
   if (code === 4001 || /user rejected|user denied/i.test(msg)) {
-    return "Transaksi ditolak di wallet. Tidak ada yang terkirim.";
+    return t("errUserRejected");
   }
   if (/insufficient funds/i.test(msg)) {
-    return "tBNB di wallet tidak cukup untuk gas (atau untuk pembayaran tBNB). Klaim tBNB gratis di faucet testnet.";
+    return t("errInsufficientFunds");
   }
   // Custom error KongMarket (nama persis seperti di src/KongMarket.sol).
-  if (/NoListing/.test(msg)) return "Listing tidak ditemukan — mungkin sudah terjual atau dibatalkan.";
-  if (/NotSeller/.test(msg)) return "Hanya penjual yang bisa mengubah atau membatalkan listing ini.";
-  if (/BelowFloor/.test(msg)) return "Harga di bawah floor tier pass ini.";
-  if (/NotPassOwner/.test(msg)) return "Wallet ini bukan pemilik pass tersebut.";
-  if (/OwnershipChanged/.test(msg)) return "Pass sudah berpindah pemilik sejak di-listing — listing ini sudah basi.";
-  if (/NotApproved/.test(msg)) return "Pass belum di-approve ke kontrak market.";
-  if (/SelfPurchase/.test(msg)) return "Anda tidak bisa membeli listing Anda sendiri.";
-  if (/IncorrectValue/.test(msg)) return "Jumlah BNB yang dikirim tidak tepat sama dengan harga listing.";
-  if (/ValueNotAllowed/.test(msg)) return "Pembelian USDT tidak boleh mengirim BNB.";
-  if (/InvalidPrice/.test(msg)) return "Harga tidak valid.";
-  if (/InvalidPaymentToken/.test(msg)) return "Mata uang pembayaran tidak valid (hanya USDT atau BNB).";
-  if (/NotTreasury/.test(msg)) return "Hanya treasury yang bisa menarik fee yang terkumpul.";
-  if (/NothingToSweep/.test(msg)) return "Tidak ada fee yang terkumpul untuk ditarik.";
-  if (/PriceAboveMax/.test(msg)) return "Harga listing berubah sebelum transaksi diproses — pembelian dibatalkan otomatis oleh proteksi batas harga. Muat ulang listing dan coba lagi.";
-  if (/ERC20InsufficientAllowance/.test(msg)) return "Kontrak market belum di-approve untuk memakai USDT sebesar itu. Approve dulu, lalu beli.";
-  if (/ERC20InsufficientBalance/.test(msg)) return "Saldo USDT di wallet tidak cukup untuk pembelian ini.";
-  if (/ERC721NonexistentToken|nonexistent token/i.test(msg)) return "Pass tersebut sudah tidak ada.";
-  if (/AlreadyClaimed/.test(msg)) return "Wallet ini sudah klaim test pass (1 per wallet).";
-  if (/OutOfStock/.test(msg)) return "Stok test pass habis — dispenser berikutnya akan diumumkan di channel Kong Alpha.";
+  if (/NoListing/.test(msg)) return t("errNoListing");
+  if (/NotSeller/.test(msg)) return t("errNotSeller");
+  if (/BelowFloor/.test(msg)) return t("errBelowFloor");
+  if (/NotPassOwner/.test(msg)) return t("errNotPassOwner");
+  if (/OwnershipChanged/.test(msg)) return t("errOwnershipChanged");
+  if (/NotApproved/.test(msg)) return t("errNotApproved");
+  if (/SelfPurchase/.test(msg)) return t("errSelfPurchase");
+  if (/IncorrectValue/.test(msg)) return t("errIncorrectValue");
+  if (/ValueNotAllowed/.test(msg)) return t("errValueNotAllowed");
+  if (/InvalidPrice/.test(msg)) return t("errInvalidPrice");
+  if (/InvalidPaymentToken/.test(msg)) return t("errInvalidPaymentToken");
+  if (/NotTreasury/.test(msg)) return t("errNotTreasury");
+  if (/NothingToSweep/.test(msg)) return t("errNothingToSweep");
+  if (/PriceAboveMax/.test(msg)) return t("errPriceAboveMax");
+  if (/ERC20InsufficientAllowance/.test(msg)) return t("errAllowance");
+  if (/ERC20InsufficientBalance/.test(msg)) return t("errUsdtBalance");
+  if (/ERC721NonexistentToken|nonexistent token/i.test(msg)) return t("errNoToken");
+  if (/AlreadyClaimed/.test(msg)) return t("errAlreadyClaimed");
+  if (/OutOfStock/.test(msg)) return t("errOutOfStock");
   if (/network|fetch|timeout|failed/i.test(msg) && code !== "CALL_EXCEPTION") {
-    return "Tidak bisa menjangkau BSC Testnet. Periksa koneksi Anda dan coba lagi.";
+    return t("errNetwork");
   }
-  return "Terjadi kesalahan. Silakan coba lagi.";
+  return t("errGeneric");
 }
 
 // ---------------------------------------------------------------------------
@@ -1824,12 +1843,12 @@ function renderStaticInfo() {
     a.rel = "noopener";
     a.textContent = MARKET_ADDRESS;
     marketLine.replaceChildren(
-      document.createTextNode("KongMarket: "),
+      document.createTextNode(t("marketLabel")),
       a
     );
   } else {
     marketLine.textContent =
-      "KongMarket: belum di-deploy ke BSC Testnet — alamat resmi akan tampil di sini setelah deploy testnet.";
+      t("marketNotDeployedLine");
   }
 
   // Footer: tautan kontrak.
@@ -1848,7 +1867,7 @@ function renderStaticInfo() {
     marketFooter.textContent = MARKET_ADDRESS;
     marketFooter.href = bscscanAddress(MARKET_ADDRESS);
   } else {
-    marketFooter.textContent = "Belum di-deploy";
+    marketFooter.textContent = t("notDeployedShort");
     marketFooter.removeAttribute("href");
   }
 }
@@ -1880,6 +1899,11 @@ function wireWalletEvents() {
 }
 
 async function init() {
+  // Bahasa: baca preferensi tersimpan (bawaan: Indonesia), terapkan ke
+  // teks statis HTML, lalu setel pemilih bahasa di header.
+  const initialLang = initLang();
+  applyStaticI18n();
+  $("lang-select").value = initialLang;
   renderStaticInfo();
   renderTestnetPanel();
   renderListings();
@@ -1914,6 +1938,19 @@ async function init() {
   });
   $("mint-usdt-btn").addEventListener("click", mintTestUsdt);
   $("claim-pass-btn").addEventListener("click", claimTestPass);
+  $("lang-select").addEventListener("change", (e) => {
+    if (!setLang(e.target.value)) return;
+    applyStaticI18n();
+    // Render ulang semua konten dinamis dalam bahasa baru. (Riwayat
+    // tx-status / error-banner sengaja dibiarkan — itu log transaksi,
+    // bukan teks antarmuka.)
+    updateWalletUI();
+    renderStaticInfo();
+    renderTestnetPanel();
+    renderListings();
+    renderMyPasses();
+    renderBuyConfirm();
+  });
 
   wireWalletEvents();
 
