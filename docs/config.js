@@ -194,6 +194,33 @@ export const AGENT_ID_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
 ];
 
+// AgentQuest — the free soulbound badge collection for Agent ID holders
+// (kingkoung.ai's Binance Agent ID Hackathon entry). Badge holders get
+// three benefits in the $KONG sale (see docs/agentquest-kong-benefit-plan.md):
+// a 10M KONG holder airdrop, a +20% buyer bonus, and 48h early access.
+// Contract: 0x26ad277193ff31bd086a47bf7b1d25a93573c989 (BSC, verified).
+export const AGENTQUEST_ADDRESS = "0x26ad277193ff31bd086a47bf7b1d25a93573c989";
+export const AGENTQUEST_URL = "https://zainumq.github.io/agentquest";
+
+// Minimal AgentQuest ABI — only the views this page uses.
+// balanceOf(wallet) = number of badges held (0-4, one per quest);
+// claimed(q, wallet) reports each quest individually. Signatures verified
+// against the deployed contract. NOTE: heldCount() is NOT the badge
+// count — it counts curated collections held (0-30, the Collector quest
+// metric), so this page deliberately does not use it.
+export const AGENTQUEST_ABI = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function claimed(uint8 quest, address wallet) view returns (bool)",
+];
+
+// The four AgentQuest quests, in contract order.
+export const AGENTQUEST_QUESTS = [
+  { quest: 0, name: "Agent ID Holder" },
+  { quest: 1, name: "Collector I" },
+  { quest: 2, name: "Collector II" },
+  { quest: 3, name: "Collector III" },
+];
+
 // The pass contract has no token enumeration, so the frontend finds a
 // wallet's passes by scanning ownerOf(1..sharesSold). The scan stops as
 // soon as it has found as many passes as balanceOf() reports, and it

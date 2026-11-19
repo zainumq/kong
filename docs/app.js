@@ -33,6 +33,9 @@ import {
   KONG_PASS_ABI,
   ERC20_ABI,
   AGENT_ID_ABI,
+  AGENTQUEST_ADDRESS,
+  AGENTQUEST_ABI,
+  AGENTQUEST_QUESTS,
   PASS_SCAN_CAP,
   SALE_POLL_MS,
 } from "./config.js";
@@ -91,6 +94,8 @@ const wallet = {
   referralEarned: null,
   referralClaimable: null,
   passes: [], // [{ tokenId, tier, claimable, paidFor }]
+  agentQuestCount: null, // AgentQuest badges held (0-4), null when unknown
+  agentQuestClaimed: null, // [bool x4] per-quest claimed flags
 };
 
 // Mint form state.
@@ -119,6 +124,9 @@ function kongContract(provider) {
 }
 function agentIdContract(provider) {
   return new ethers.Contract(AGENT_ID_ADDRESS, AGENT_ID_ABI, provider);
+}
+function agentQuestContract(provider) {
+  return new ethers.Contract(AGENTQUEST_ADDRESS, AGENTQUEST_ABI, provider);
 }
 
 /** Run `fn(provider)` against read providers in order; first success wins. */
@@ -221,11 +229,14 @@ function disconnectWallet() {
     referralEarned: null,
     referralClaimable: null,
     passes: [],
+    agentQuestCount: null,
+    agentQuestClaimed: null,
   });
   clearError();
   clearTxStatus();
   updateWalletUI();
   renderAgentId();
+  renderAgentQuest();
   renderMintForm();
   renderReferral();
   renderPassLists();
@@ -654,6 +665,22 @@ async function refreshWallet() {
   }
   renderAgentId();
 
+  // AgentQuest badges (airdrop + buyer bonus eligibility).
+  try {
+    const [count, ...claimedFlags] = await Promise.all([
+      withReadProvider((p) => agentQuestContract(p).balanceOf(account)),
+      ...AGENTQUEST_QUESTS.map((q) =>
+        withReadProvider((p) => agentQuestContract(p).claimed(q.quest, account))
+      ),
+    ]);
+    wallet.agentQuestCount = Number(count);
+    wallet.agentQuestClaimed = claimedFlags.map(Boolean);
+  } catch {
+    wallet.agentQuestCount = null;
+    wallet.agentQuestClaimed = null;
+  }
+  renderAgentQuest();
+
   try {
     const [minted, passBalance, usdtBalance, usdtAllowance, kongBalance, referralEarned, referralClaimable] =
       await Promise.all([
@@ -704,6 +731,47 @@ function renderAgentId() {
     setPill(el, "✗ No Agent ID in this wallet", "bad");
     $("mint-no-agent-id").hidden = false;
   }
+}
+
+function renderAgentQuest() {
+  const pill = $("agentquest-pill");
+  const status = $("agentquest-status");
+  const list = $("agentquest-quests");
+  if (!account) {
+    setPill(pill, "Connect your wallet to check your badges.", "muted");
+    status.textContent = "Connect your wallet to see your badges.";
+    list.hidden = true;
+    list.innerHTML = "";
+    return;
+  }
+  if (wallet.agentQuestCount === null) {
+    setPill(pill, "Badge status unknown — RPC unreachable.", "warn");
+    status.textContent = "Could not read your AgentQuest badges from BNB Chain.";
+    list.hidden = true;
+    list.innerHTML = "";
+    return;
+  }
+  const count = wallet.agentQuestCount;
+  if (count === 0) {
+    setPill(pill, "0 of 4 badges", "warn");
+    status.textContent =
+      "You hold no AgentQuest badges yet — claim them free (gas only) to unlock the airdrop and buyer bonus.";
+  } else {
+    setPill(pill, `✓ ${count} of 4 badges`, "ok");
+    status.textContent =
+      count === 4
+        ? "You hold all 4 AgentQuest badges — maximum airdrop share, and the +20% buyer bonus when you mint."
+        : `You hold ${count} of 4 AgentQuest badges — you're eligible for the airdrop and the +20% buyer bonus. Claim the rest to grow your share.`;
+  }
+  list.innerHTML = "";
+  AGENTQUEST_QUESTS.forEach((q, i) => {
+    const li = document.createElement("li");
+    const done = wallet.agentQuestClaimed ? wallet.agentQuestClaimed[i] : false;
+    li.className = done ? "quest-done" : "quest-todo";
+    li.textContent = `${done ? "✓" : "○"} ${q.name}`;
+    list.appendChild(li);
+  });
+  list.hidden = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -1491,6 +1559,7 @@ async function init() {
   renderTierCards();
   renderSaleStatus();
   renderAgentId();
+  renderAgentQuest();
   renderMintForm();
   renderReferral();
   renderPassLists();
