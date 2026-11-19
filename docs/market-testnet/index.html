@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Marketplace $KONG — DEMO TESTNET. Coba jual beli Kong Mint Pass di BSC Testnet tanpa uang sungguhan: klaim test pass gratis, mint test USDT, lalu list dan beli." />
+  <meta property="og:title" content="Marketplace $KONG — Demo Testnet" />
+  <meta property="og:description" content="Coba marketplace Kong Mint Pass di BSC Testnet: test pass gratis, test USDT gratis, tanpa uang sungguhan." />
+  <meta property="og:image" content="https://zainumq.github.io/kong/kong-pass-tier1.jpg" />
+  <title>Marketplace $KONG — Demo Testnet</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="./market.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <img class="brand-img" src="https://zainumq.github.io/kong/kong-pass-tier1.jpg" alt="" width="40" height="40" />
+        <div>
+          <h1>$KONG <span class="brand-kong">Marketplace</span> <span class="pill pill-warn">TESTNET</span></h1>
+          <p class="brand-sub">Demo testnet — BSC Testnet (chain 97), tanpa uang sungguhan</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="btn" href="../market/">Marketplace mainnet →</a>
+        <span id="network-pill" class="pill pill-muted" hidden></span>
+        <button id="connect-btn" class="btn btn-primary" type="button">Hubungkan wallet</button>
+        <span id="account-label" class="account-label" hidden></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="error-banner" class="banner banner-error" hidden></div>
+
+    <div class="banner banner-warn">
+      <strong>DEMO TESTNET — semua token di halaman ini tidak bernilai.</strong>
+      <span>tBNB, test USDT, dan test pass di sini hanya untuk mencoba alur marketplace (list / beli / ubah harga / batal). Tidak ada sale, graduation, klaim $KONG, atau refund di testnet. Jangan kirim aset mainnet ke alamat testnet mana pun.</span>
+    </div>
+
+    <div id="network-warning" class="banner banner-warn" hidden>
+      <strong>Jaringan salah.</strong>
+      <span>Wallet Anda tidak di BSC Testnet (chain 97). Membeli dan me-listing di demo ini butuh BSC Testnet.</span>
+      <button id="switch-network-btn" class="btn btn-small" type="button">Pindah ke BSC Testnet</button>
+    </div>
+
+    <div id="not-deployed-banner" class="banner banner-warn" hidden>
+      <strong>Marketplace belum dibuka.</strong>
+      <span>Kontrak market belum di-deploy. Halaman ini akan aktif otomatis setelah kontrak aktif.</span>
+    </div>
+
+    <section class="hero" aria-label="Tentang demo testnet">
+      <img class="hero-img" src="https://zainumq.github.io/kong/kong-pass-tier1.jpg" alt="Kong Mint Pass — artwork Tier 1 Gold: King Kong berpakaian agen rahasia" width="360" height="360" />
+      <div class="intro">
+        <h2 class="hero-title">Coba marketplace-nya, gratis.</h2>
+        <p>
+          Demo ini memakai kontrak marketplace $KONG yang sama persis dengan
+          versi mainnet — hanya saja berjalan di BSC Testnet dengan token
+          test. Ambil tBNB dari faucet, mint test USDT, klaim satu test
+          pass gratis, lalu coba jual beli seperti di mainnet nanti.
+        </p>
+        <p class="intro-note">
+          Non-custodial: pass tetap di wallet penjual selama ter-listing.
+          Dana terbagi otomatis — penjual 94%, royalti 5% ke treasury,
+          fee marketplace 1%.
+        </p>
+        <p class="intro-note">
+          Harga listing tidak boleh di bawah floor tier-nya (sama dengan
+          harga mint): 1 / 1,5 / 2 test USDT.
+        </p>
+      </div>
+    </section>
+
+    <section id="test-tokens" aria-label="Token test">
+      <div class="section-head">
+        <h2>Token test — 3 langkah sebelum mencoba</h2>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h2>1. tBNB (gas)</h2>
+          <p class="card-note">Klaim tBNB gratis di faucet resmi BNB Chain. Syarat faucet: alamat Anda harus punya saldo mainnet ≥0,002 BNB + selesaikan captcha.</p>
+          <p><a id="faucet-link" class="btn btn-small" href="https://www.bnbchain.org/en/testnet-faucet" target="_blank" rel="noopener">Buka faucet tBNB →</a></p>
+        </div>
+        <div class="card">
+          <h2>2. Test USDT</h2>
+          <p id="testnet-usdt-balance" class="big-status">—</p>
+          <p class="card-note">Test USDT di-mint langsung dari kontrak mock (publik, siapa pun boleh). 100 test USDT per klik — cukup untuk banyak percobaan beli.</p>
+          <p><button id="mint-usdt-btn" class="btn btn-primary btn-small" type="button" disabled>Mint 100 test USDT</button></p>
+        </div>
+        <div class="card">
+          <h2>3. Test pass</h2>
+          <p id="testnet-pass-status" class="big-status">—</p>
+          <p class="card-note">Satu test pass gratis per wallet dari dispenser. <span id="dispenser-remaining">—</span> · Tier-nya acak (Gold / Silver / Bronze).</p>
+          <p><button id="claim-pass-btn" class="btn btn-primary btn-small" type="button" disabled>Klaim test pass gratis</button></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="listings-section" aria-label="Listing">
+      <div class="section-head">
+        <h2>Listing</h2>
+        <button id="refresh-listings-btn" class="btn btn-small" type="button">Muat ulang listing</button>
+      </div>
+      <p class="section-note">
+        Setiap listing diverifikasi live sebelum ditampilkan: penjual masih
+        pemilik pass, approval ke market masih berlaku, dan listing di
+        kontrak masih cocok. Listing yang sudah tidak valid disembunyikan.
+      </p>
+
+      <div class="filter-bar">
+        <label class="filter-label" for="filter-tier">Tier
+          <select id="filter-tier" class="text-input filter-select">
+            <option value="0">Semua tier</option>
+            <option value="1">Tier 1 — Gold</option>
+            <option value="2">Tier 2 — Silver</option>
+            <option value="3">Tier 3 — Bronze</option>
+          </select>
+        </label>
+        <label class="filter-label" for="filter-currency">Mata uang
+          <select id="filter-currency" class="text-input filter-select">
+            <option value="all">Semua</option>
+            <option value="USDT">USDT</option>
+            <option value="BNB">BNB</option>
+          </select>
+        </label>
+        <label class="filter-label" for="filter-sort">Urutkan harga
+          <select id="filter-sort" class="text-input filter-select">
+            <option value="asc">Termurah dulu</option>
+            <option value="desc">Termahal dulu</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="listings-count" class="muted-text"></p>
+      <p id="listings-note" class="muted-text"></p>
+      <div id="listing-grid" class="pass-grid"></div>
+      <p class="muted-text rates-note">Semua harga di halaman ini dalam test USDT / tBNB — token test tanpa nilai.</p>
+    </section>
+
+    <div id="buy-confirm" class="confirm-box" hidden></div>
+    <div id="tx-status" class="tx-status" hidden></div>
+
+    <section id="my-passes-section" aria-label="Pass saya">
+      <div class="section-head">
+        <h2>Pass saya</h2>
+      </div>
+      <p id="my-passes-note" class="section-note">Hubungkan wallet untuk melihat pass Anda dan me-listingnya.</p>
+      <p id="my-passes-loading" class="muted-text" hidden>Memindai pass Anda…</p>
+      <div id="my-passes-grid" class="pass-grid"></div>
+    </section>
+
+    <section id="how-section" aria-label="Cara kerja">
+      <h2>Cara kerja</h2>
+      <ol class="steps">
+        <li><strong>List</strong> — approve kontrak market atas pass Anda, lalu tentukan harga (test USDT atau tBNB). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.</li>
+        <li><strong>Beli</strong> — untuk listing test USDT, approve test USDT sebesar harga dulu; untuk listing tBNB, tBNB dikirim bersama transaksi beli. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.</li>
+        <li><strong>Ubah / batal</strong> — penjual bisa mengubah harga atau membatalkan listing kapan saja (biaya gas tBNB saja).</li>
+        <li><strong>Tidak ada klaim / refund di testnet</strong> — test pass tidak bisa diklaim menjadi $KONG dan tidak ada refund. Di mainnet nanti, pemilik bisa klaim (setelah graduation) atau refund (bila sale gagal) kapan saja, bahkan saat pass ter-listing.</li>
+      </ol>
+
+      <h3>Floor harga per tier (testnet — sama dengan mainnet)</h3>
+      <table class="info-table">
+        <thead>
+          <tr><th>Tier</th><th>Floor test USDT</th><th>Floor tBNB</th><th>Harga impas*</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tier 1 — Gold</td><td>1 test USDT</td><td>~0,0017 tBNB</td><td>1,064 test USDT</td></tr>
+          <tr><td>Tier 2 — Silver</td><td>1,5 test USDT</td><td>~0,00254 tBNB</td><td>1,596 test USDT</td></tr>
+          <tr><td>Tier 3 — Bronze</td><td>2 test USDT</td><td>~0,00339 tBNB</td><td>2,128 test USDT</td></tr>
+        </tbody>
+      </table>
+      <p class="muted-text">* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%).</p>
+
+      <h3>Contoh pembagian — penjualan 2 test USDT</h3>
+      <table class="info-table">
+        <thead>
+          <tr><th>Bagian</th><th>Besaran</th><th>Penerima</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Royalti</td><td>0,10 test USDT</td><td>Treasury (testnet)</td></tr>
+          <tr><td>Fee marketplace</td><td>0,02 test USDT</td><td>Ditampung di kontrak market</td></tr>
+          <tr><td>Penjual terima</td><td>1,88 test USDT</td><td>Penjual</td></tr>
+        </tbody>
+      </table>
+
+      <div class="banner banner-warn">
+        <strong>Hati-hati approval palsu.</strong>
+        <span>Hanya approve alamat kontrak market resmi di bawah ini. Jangan pernah approve kontrak lain yang mengatasnamakan marketplace KONG — approval palsu bisa memindahkan pass Anda.</span>
+      </div>
+      <ul class="facts">
+        <li id="market-address-line"><strong>KongMarket (testnet):</strong> belum di-deploy</li>
+        <li><strong>KongMintPass (mock testnet):</strong> <a class="mono" href="https://testnet.bscscan.com/address/0xfB10858719919f0eA3149F2c25CBe52086dF9984" target="_blank" rel="noopener">0xfB10858719919f0eA3149F2c25CBe52086dF9984</a></li>
+        <li><strong>MockUSDT (testnet):</strong> <a class="mono" href="https://testnet.bscscan.com/address/0x41de1C38502d5Ae2672470620Ac183Db566dde8A" target="_blank" rel="noopener">0x41de1C38502d5Ae2672470620Ac183Db566dde8A</a></li>
+        <li><strong>Dispenser test pass:</strong> <a class="mono" href="https://testnet.bscscan.com/address/0xE09243FA8374b2b40bfC448d4b8F67C777ca7223" target="_blank" rel="noopener">0xE09243FA8374b2b40bfC448d4b8F67C777ca7223</a></li>
+        <li><strong>Treasury (testnet):</strong> <a class="mono" href="https://testnet.bscscan.com/address/0x5951eBe74f43CbA573064a23dE2EAcA18F6a1601" target="_blank" rel="noopener">0x5951eBe74f43CbA573064a23dE2EAcA18F6a1601</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul class="facts">
+        <li><strong>KongMarket (testnet):</strong> <a class="mono" id="footer-market" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>KongMintPass (mock):</strong> <a class="mono" id="footer-pass" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>MockUSDT:</strong> <a class="mono" id="footer-usdt" href="#" target="_blank" rel="noopener">—</a></li>
+        <li><strong>Dispenser:</strong> <a class="mono" id="footer-dispenser" href="#" target="_blank" rel="noopener">—</a></li>
+      </ul>
+      <p>
+        Demo testnet marketplace $KONG — frontend statis tanpa server, semua
+        data dibaca langsung dari BSC Testnet. Versi mainnet (uang sungguhan)
+        ada di <a href="../market/">marketplace mainnet</a>.
+      </p>
+      <p class="footer-note">
+        Bukan nasihat keuangan. Semua token di halaman ini adalah token test
+        tanpa nilai. Selalu periksa alamat kontrak di wallet sebelum
+        menyetujui transaksi apa pun.
+      </p>
+    </div>
+  </footer>
+
+  <noscript>
+    <p style="text-align:center;padding:2rem">Marketplace $KONG butuh JavaScript untuk membaca blockchain dan berbicara dengan wallet Anda.</p>
+  </noscript>
+  <script type="module" src="./market-testnet.js"></script>
+</body>
+</html>
