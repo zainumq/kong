@@ -588,17 +588,44 @@ async function loadListings() {
       await withReadProvider((p) => passContract(p).nextTokenId())
     );
     const found = new Map();
-    const CHUNK = 50;
+    // RPC testnet publik sering gagal per panggilan (rate limit / node
+    // sibuk — 20 Nov 2026: satu listingOf gagal membuat seluruh Promise.all
+    // reject dan halaman menampilkan "Listing gagal" padahal "Pass saya"
+    // termuat normal). Karena itu tiap listingOf ditangkap per panggilan
+    // (.catch -> null), id yang gagal dicoba sekali lagi, dan yang tetap
+    // gagal dianggap tidak ter-listing. Hanya bila SEMUA panggilan gagal
+    // (RPC benar-benar down) halaman menampilkan error.
+    const CHUNK = 25;
+    let anyReadOk = false;
     for (let start = 1; start < nextId; start += CHUNK) {
       const end = Math.min(start + CHUNK - 1, nextId - 1);
       const ids = [];
       for (let i = start; i <= end; i++) ids.push(i);
-      const results = await withReadProvider((p) => {
-        const c = marketContract(p);
-        return Promise.all(ids.map((id) => c.listingOf(id)));
-      });
+      const readChunk = (list) =>
+        withReadProvider((p) => {
+          const c = marketContract(p);
+          return Promise.all(
+            list.map((id) => c.listingOf(id).catch(() => null))
+          );
+        });
+      const results = await readChunk(ids);
+      const failedIdx = [];
+      for (let k = 0; k < ids.length; k++) {
+        if (results[k] === null) failedIdx.push(k);
+        else anyReadOk = true;
+      }
+      if (failedIdx.length > 0) {
+        const retry = await readChunk(failedIdx.map((k) => ids[k]));
+        for (let j = 0; j < failedIdx.length; j++) {
+          if (retry[j] !== null) {
+            results[failedIdx[j]] = retry[j];
+            anyReadOk = true;
+          }
+        }
+      }
       for (let k = 0; k < ids.length; k++) {
         const onChain = results[k];
+        if (!onChain) continue;
         if (
           onChain.seller.toLowerCase() !== ZERO_ADDRESS &&
           onChain.price > 0n
@@ -613,6 +640,7 @@ async function loadListings() {
         }
       }
     }
+    if (nextId > 1 && !anyReadOk) throw new Error(t("rpcAllFailed"));
     listings = found;
   } catch (err) {
     listingsLoading = false;
