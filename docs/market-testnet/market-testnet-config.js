@@ -11,10 +11,12 @@
 //   KongMarket (testnet)  0x60Ef77Fc2961bc3BE20198aE2Fd90751F6a1530b
 //   Mock KongMintPass     0xfB10858719919f0eA3149F2c25CBe52086dF9984
 //   MockUSDT (mint publik) 0x41de1C38502d5Ae2672470620Ac183Db566dde8A
-//   KongTestPassDispenser 0xE09243FA8374b2b40bfC448d4b8F67C777ca7223
-//                         (stok tokenId 3-32; klaim 1/wallet)
+//   KongTestPassDispenser #2 0xE40421FD8f1b1Bce85c02F3b3FEaF915dffE029A
+//                         (stok 1.000 pass, tokenId 33-1032; klaim 1/wallet)
+//   Dispenser #1 (0xE09243FA8374b2b40bfC448d4b8F67C777ca7223, stok 30,
+//   tokenId 3-32) PENSIUN 20 Nov 2026 — 27 pass-nya tidak terpakai.
 //   Ketiganya + dispenser: Sourcify exact_match di chain 97.
-//   Detail deploy: kong/testnet-deploy-20261119.md §5-6.
+//   Detail deploy: kong/testnet-deploy-20261119.md §5-7.
 //
 //   SEMUA TOKEN DI TESTNET TIDAK BERNILAI. Tidak ada sale, graduation,
 //   klaim KONG, atau refund di testnet — halaman ini murni demo supaya
@@ -25,7 +27,7 @@
 export const MARKET_ADDRESS = "0x60Ef77Fc2961bc3BE20198aE2Fd90751F6a1530b";
 export const KONG_PASS_ADDRESS = "0xfB10858719919f0eA3149F2c25CBe52086dF9984";
 export const USDT_ADDRESS = "0x41de1C38502d5Ae2672470620Ac183Db566dde8A";
-export const DISPENSER_ADDRESS = "0xE09243FA8374b2b40bfC448d4b8F67C777ca7223";
+export const DISPENSER_ADDRESS = "0xE40421FD8f1b1Bce85c02F3b3FEaF915dffE029A";
 
 // Blok deploy KongMarket testnet (tx 0xd49c7f2b…, 19 Nov 2026) — untuk
 // query event; tanpa ini fallback eth_getLogs RPC tidak bisa jalan.
@@ -88,10 +90,11 @@ export const TIER_FLOORS = {
 // pernah ditampilkan sebagai nilai uang di halaman testnet.
 export const SORT_BNB_USD = 589.89;
 
-// Scan ownerOf untuk "Pass saya": tokenId 1..cap. Stok dispenser saat
-// ini 30 pass (#3-32); cap 500 memberi ruang untuk dispenser berikutnya
-// tanpa membuat scan berat (scan berhenti begitu semua pass ketemu).
-export const TESTNET_PASS_SCAN_CAP = 500;
+// Scan ownerOf untuk "Pass saya": tokenId 1..cap. Stok dispenser #2
+// 1.000 pass (#33-1032); cap 1200 memberi ruang untuk dispenser
+// berikutnya tanpa membuat scan berat (scan berhenti begitu semua pass
+// ketemu).
+export const TESTNET_PASS_SCAN_CAP = 1200;
 
 // Tier metadata — sama dengan halaman mint mainnet (mock pass memakai
 // konstanta tier yang sama; artwork dari hosting yang sama).
