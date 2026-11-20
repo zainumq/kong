@@ -120,7 +120,9 @@ const wallet = {
 let listings = new Map();
 let verified = [];
 let staleCount = 0;
-let listingsLoading = false;
+let listingsLoading = true; // true sejak awal: render pertama harus
+// menampilkan spinner, bukan status kosong "Belum ada listing." padahal
+// pemuatan belum mulai (panel testnet dimuat dulu, ~25 detik).
 let listingsError = null;
 let listingsSource = null; // "bscscan" | "rpc" | null
 
@@ -150,11 +152,35 @@ function marketContract(providerOrSigner) {
 }
 
 /** Jalankan `fn(provider)` ke provider baca berurutan; yang pertama sukses menang. */
+// Satu percobaan baca dibatasi 20 detik: RPC testnet publik kadang
+// menggantung tanpa merespons (tanpa timeout, fetch bisa menggantung
+// bermenit-menit dan halaman tampak "terjebak" di status memuat —
+// teramati 20 Nov 2026 saat RPC sibuk).
+function withTimeout(promise, ms) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error("read timeout")), ms);
+  });
+  return Promise.race([
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        return v;
+      },
+      (e) => {
+        clearTimeout(timer);
+        throw e;
+      }
+    ),
+    timeout,
+  ]);
+}
+
 async function withReadProvider(fn) {
   let lastError = null;
   for (const provider of readProviders) {
     try {
-      return await fn(provider);
+      return await withTimeout(fn(provider), 20_000);
     } catch (err) {
       lastError = err;
     }
@@ -1982,10 +2008,10 @@ async function init() {
 
   wireWalletEvents();
 
-  // Muat panel testnet + listing (semuanya jalan tanpa wallet),
-  // lalu polling panel testnet tiap menit.
-  await refreshTestnetPanel();
-  await loadListings();
+  // Muat panel testnet + listing secara paralel (keduanya jalan tanpa
+  // wallet dan independen), lalu polling panel testnet tiap menit.
+  // Sebelumnya berurutan — listing menunggu panel (~25 detik) dulu.
+  await Promise.all([refreshTestnetPanel(), loadListings()]);
   setInterval(refreshTestnetPanel, 60_000);
 
   // Reconnect diam-diam bila wallet sudah pernah diotorisasi (tanpa prompt).
