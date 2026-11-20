@@ -49,8 +49,9 @@ import {
   MARKET_FEE_BPS,
   USDT_IDR_FALLBACK,
   BNB_IDR_FALLBACK,
-  BNB_USD_FALLBACK,
-  COINGECKO_URL,
+  BNB_USDT_FALLBACK,
+  COINGECKO_USDT_IDR_URL,
+  BINANCE_US_BNB_USDT_URL,
 } from "./market-config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -106,24 +107,26 @@ let busy = false; // sebuah transaksi sedang berjalan
 // Dibaca live di refreshSaleState; 18 adalah fallback yang benar.
 let usdtDecimals = 18;
 
-// Kurs IDR: live dari CoinGecko bila bisa, kalau tidak pakai kurs acuan
-// tetap dari market-config.js (19 Nov 2026). rates.live menandai sumbernya.
+// Kurs berbasis USDT: USDT/IDR live dari CoinGecko, BNB/USDT live dari
+// ticker Binance US, BNB/IDR diturunkan (BNB/USDT x USDT/IDR). Bila satu
+// kaki gagal, kaki itu memakai kurs acuan tetap dari market-config.js
+// (19 Nov 2026). rates.live = kedua kaki live.
 const rates = {
   usdtIdr: USDT_IDR_FALLBACK,
   bnbIdr: BNB_IDR_FALLBACK,
-  bnbUsd: BNB_USD_FALLBACK,
+  bnbUsdt: BNB_USDT_FALLBACK,
   live: false,
 };
 
-// Nilai tukar harga listing ke IDR dan ke USD (USD dipakai untuk mengurutkan
-// listing campuran USDT/BNB berdasarkan nilai yang sama).
+// Nilai tukar harga listing ke IDR dan ke USDT (USDT dipakai untuk
+// mengurutkan listing campuran USDT/BNB berdasarkan nilai yang sama).
 const priceToIdr = (price, paymentToken) => {
   const amount = Number(ethers.formatUnits(price, 18));
   return isUsdt(paymentToken) ? amount * rates.usdtIdr : amount * rates.bnbIdr;
 };
-const priceToUsd = (price, paymentToken) => {
+const priceToUsdt = (price, paymentToken) => {
   const amount = Number(ethers.formatUnits(price, 18));
-  return isUsdt(paymentToken) ? amount : amount * rates.bnbUsd;
+  return isUsdt(paymentToken) ? amount : amount * rates.bnbUsdt;
 };
 
 // Status sale (dibaca live dari KongSale — sama seperti halaman mint).
@@ -605,32 +608,49 @@ function tickCountdown() {
 }
 
 // ---------------------------------------------------------------------------
-// Kurs IDR (CoinGecko live, fallback kurs acuan tetap — lihat market-config.js)
+// Kurs berbasis USDT (CoinGecko USDT/IDR + Binance US BNB/USDT live,
+// fallback kurs acuan tetap — lihat market-config.js)
 // ---------------------------------------------------------------------------
 
 async function refreshRates() {
-  try {
+  // Kedua kaki diambil independen — yang gagal memakai kurs acuan tetap,
+  // halaman tidak boleh gagal hanya karena satu API harga mati.
+  const fetchJson = async (url) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(COINGECKO_URL, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
-    const json = await res.json();
-    const usdtIdr = json?.tether?.idr;
-    const bnbIdr = json?.binancecoin?.idr;
-    const bnbUsd = json?.binancecoin?.usd;
-    if (typeof usdtIdr !== "number" || typeof bnbIdr !== "number") {
-      throw new Error("Respons CoinGecko tidak lengkap.");
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } finally {
+      clearTimeout(timeout);
     }
-    rates.usdtIdr = usdtIdr;
-    rates.bnbIdr = bnbIdr;
-    if (typeof bnbUsd === "number") rates.bnbUsd = bnbUsd;
-    rates.live = true;
+  };
+  let usdtLive = false;
+  let bnbLive = false;
+  try {
+    const json = await fetchJson(COINGECKO_USDT_IDR_URL);
+    const usdtIdr = json?.tether?.idr;
+    if (typeof usdtIdr === "number" && usdtIdr > 0) {
+      rates.usdtIdr = usdtIdr;
+      usdtLive = true;
+    }
   } catch {
-    // Tetap pakai kurs acuan tetap — halaman tidak boleh gagal hanya
-    // karena API harga mati. Catatan kurs ditampilkan di bawah grid.
-    rates.live = false;
+    // Tetap pakai USDT_IDR_FALLBACK.
   }
+  try {
+    const json = await fetchJson(BINANCE_US_BNB_USDT_URL);
+    const bnbUsdt = parseFloat(json?.price);
+    if (Number.isFinite(bnbUsdt) && bnbUsdt > 0) {
+      rates.bnbUsdt = bnbUsdt;
+      bnbLive = true;
+    }
+  } catch {
+    // Tetap pakai BNB_USDT_FALLBACK.
+  }
+  // BNB/IDR selalu diturunkan lewat USDT supaya konsisten.
+  rates.bnbIdr = rates.bnbUsdt * rates.usdtIdr;
+  rates.live = usdtLive && bnbLive;
   renderRatesNote();
   renderListings();
   renderMyPasses();
@@ -638,13 +658,17 @@ async function refreshRates() {
 
 function renderRatesNote() {
   const el = $("rates-note");
+  const bnbUsdt = rates.bnbUsdt.toLocaleString("id-ID", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   el.textContent = rates.live
-    ? `Kurs IDR live (CoinGecko): 1 USDT ≈ ${fmtIdr(
+    ? `Kurs live (CoinGecko + Binance US): 1 USDT ≈ ${fmtIdr(
         rates.usdtIdr
-      )} · 1 BNB ≈ ${fmtIdr(rates.bnbIdr)}.`
-    : `Kurs IDR acuan 19 Nov 2026 (API harga tidak tersedia): 1 USDT ≈ ${fmtIdr(
+      )} · 1 BNB ≈ ${bnbUsdt} USDT (≈ ${fmtIdr(rates.bnbIdr)}).`
+    : `Kurs acuan 19 Nov 2026 (API harga tidak tersedia): 1 USDT ≈ ${fmtIdr(
         rates.usdtIdr
-      )} · 1 BNB ≈ ${fmtIdr(rates.bnbIdr)}.`;
+      )} · 1 BNB ≈ ${bnbUsdt} USDT (≈ ${fmtIdr(rates.bnbIdr)}).`;
 }
 
 // ---------------------------------------------------------------------------
@@ -917,7 +941,7 @@ function filteredListings() {
   if (filters.currency === "USDT") list = list.filter((l) => isUsdt(l.paymentToken));
   if (filters.currency === "BNB") list = list.filter((l) => isBnb(l.paymentToken));
   list.sort((a, b) => {
-    const diff = priceToUsd(a.price, a.paymentToken) - priceToUsd(b.price, b.paymentToken);
+    const diff = priceToUsdt(a.price, a.paymentToken) - priceToUsdt(b.price, b.paymentToken);
     return filters.sort === "asc" ? diff : -diff;
   });
   return list;
