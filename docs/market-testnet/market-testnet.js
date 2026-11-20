@@ -642,6 +642,68 @@ async function claimTestPass() {
  *  terjual/dibatalkan punya seller = address(0) sehingga otomatis
  *  tidak muncul).
  */
+/**
+ * Verifikasi live satu listing: penjual masih pemilik, approval ke
+ * market masih ada, dan data on-chain masih sama dengan yang dipindai.
+ * (Fungsi ini sempat hilang saat fork testnet dibuat 20 Nov 2026 —
+ * transform script menghapusnya bersama helper log BscScan — sehingga
+ * loadListings() melempar ReferenceError begitu listing pertama muncul
+ * dan halaman terjebak di status "Loading listings..." selamanya.
+ * Dipulihkan dari market.js mainnet; alasan stale memakai string yang
+ * sama seperti mainnet.)
+ */
+async function verifyListing(listing) {
+  if (!isKnownCurrency(listing.paymentToken)) {
+    return { status: "stale", reason: "Mata uang listing tidak dikenal." };
+  }
+  try {
+    const [owner, approved, approvedForAll, onChain] = await Promise.all([
+      // ownerOf revert (CALL_EXCEPTION) = token tidak ada lagi (dibakar).
+      withReadProvider((p) => passContract(p).ownerOf(listing.tokenId)).catch(
+        (err) => {
+          if (err.code === "CALL_EXCEPTION") return null;
+          throw err;
+        }
+      ),
+      withReadProvider((p) => passContract(p).getApproved(listing.tokenId)),
+      withReadProvider((p) =>
+        passContract(p).isApprovedForAll(listing.seller, MARKET_ADDRESS)
+      ),
+      withReadProvider((p) => marketContract(p).listingOf(listing.tokenId)),
+    ]);
+    if (owner === null) {
+      return { status: "stale", reason: "Pass sudah tidak ada (dibakar/diklaim)." };
+    }
+    if (owner.toLowerCase() !== listing.seller.toLowerCase()) {
+      return { status: "stale", reason: "Penjual bukan lagi pemilik pass." };
+    }
+    if (
+      approved.toLowerCase() !== MARKET_ADDRESS.toLowerCase() &&
+      !approvedForAll
+    ) {
+      return {
+        status: "stale",
+        reason: "Approval ke market sudah dicabut penjual.",
+      };
+    }
+    if (
+      onChain.seller.toLowerCase() !== listing.seller.toLowerCase() ||
+      onChain.price !== listing.price ||
+      onChain.paymentToken.toLowerCase() !==
+        listing.paymentToken.toLowerCase()
+    ) {
+      return {
+        status: "stale",
+        reason: "Listing di kontrak sudah berubah (harga/penjual berbeda).",
+      };
+    }
+    return { status: "ok" };
+  } catch {
+    // RPC gagal — bukan bukti listing basi; tampilkan tanpa tombol Beli.
+    return { status: "unknown" };
+  }
+}
+
 async function loadListings() {
   if (!MARKET_DEPLOYED) {
     listings = new Map();
