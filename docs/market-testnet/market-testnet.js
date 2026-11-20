@@ -151,6 +151,53 @@ function marketContract(providerOrSigner) {
   return new ethers.Contract(MARKET_ADDRESS, KONG_MARKET_ABI, providerOrSigner);
 }
 
+// Multicall3 (alamat kanonis yang sama di semua chain EVM, termasuk
+// BSC testnet — terverifikasi on-chain 20 Nov 2026): menggabungkan
+// puluhan listingOf menjadi SATU eth_call. Tanpa ini, loadListings
+// memindai 1..nextTokenId satu per satu — 369 panggilan saat nextTokenId
+// 369, dan 1.032 panggilan begitu stok dispenser #2 penuh — sehingga
+// halaman tampak "loading" bermenit-menit (insiden 20 Nov 2026).
+const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
+const MULTICALL3_ABI = [
+  "function aggregate3((address target, bool allowFailure, bytes callData)[] calls) returns ((bool success, bytes returnData)[] returnData)",
+];
+const LISTING_SCAN_BATCH = 50;
+const marketIface = new ethers.Interface(KONG_MARKET_ABI);
+
+function multicallContract(provider) {
+  return new ethers.Contract(MULTICALL3_ADDRESS, MULTICALL3_ABI, provider);
+}
+
+/**
+ * Baca listingOf(ids) lewat satu aggregate3. Mengembalikan array
+ * {seller, price, paymentToken} | null per id, atau null bila batch
+ * gagal total (pemanggil lalu memakai fallback per panggilan).
+ */
+async function readListingsMulticall(ids) {
+  try {
+    const calls = ids.map((id) => ({
+      target: MARKET_ADDRESS,
+      allowFailure: true,
+      callData: marketIface.encodeFunctionData("listingOf", [id]),
+    }));
+    const results = await withReadProvider((p) =>
+      multicallContract(p).aggregate3.staticCall(calls)
+    );
+    return results.map((r) => {
+      if (!r.success) return null;
+      try {
+        const [seller, price, paymentToken] =
+          marketIface.decodeFunctionResult("listingOf", r.returnData);
+        return { seller, price, paymentToken };
+      } catch {
+        return null;
+      }
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Jalankan `fn(provider)` ke provider baca berurutan; yang pertama sukses menang. */
 // Satu percobaan baca dibatasi 20 detik: RPC testnet publik kadang
 // menggantung tanpa merespons (tanpa timeout, fetch bisa menggantung
@@ -614,34 +661,44 @@ async function loadListings() {
       await withReadProvider((p) => passContract(p).nextTokenId())
     );
     const found = new Map();
-    // RPC testnet publik sering gagal per panggilan (rate limit / node
-    // sibuk — 20 Nov 2026: satu listingOf gagal membuat seluruh Promise.all
-    // reject dan halaman menampilkan "Listing gagal" padahal "Pass saya"
-    // termuat normal). Karena itu tiap listingOf ditangkap per panggilan
-    // (.catch -> null), id yang gagal dicoba sekali lagi, dan yang tetap
-    // gagal dianggap tidak ter-listing. Hanya bila SEMUA panggilan gagal
-    // (RPC benar-benar down) halaman menampilkan error.
-    const CHUNK = 25;
+    // Pindai listingOf(1..nextId-1) lewat Multicall3: 50 id per eth_call
+    // (terverifikasi live 20 Nov 2026: 368 id dalam ~2,5 detik).
+    // Bila satu batch multicall gagal, fallback ke bacaan per panggilan
+    // untuk id-id di batch itu. Id yang gagal di kedua jalur dicoba
+    // sekali lagi; yang tetap gagal dianggap tidak ter-listing. Hanya
+    // bila SEMUA bacaan gagal halaman menampilkan error.
     let anyReadOk = false;
-    for (let start = 1; start < nextId; start += CHUNK) {
-      const end = Math.min(start + CHUNK - 1, nextId - 1);
+    for (let start = 1; start < nextId; start += LISTING_SCAN_BATCH) {
+      const end = Math.min(start + LISTING_SCAN_BATCH - 1, nextId - 1);
       const ids = [];
       for (let i = start; i <= end; i++) ids.push(i);
-      const readChunk = (list) =>
-        withReadProvider((p) => {
+      const readBatch = async (list) => {
+        const mc = await readListingsMulticall(list);
+        if (mc) return mc;
+        return withReadProvider((p) => {
           const c = marketContract(p);
           return Promise.all(
-            list.map((id) => c.listingOf(id).catch(() => null))
+            list.map((id) =>
+              c
+                .listingOf(id)
+                .then(([seller, price, paymentToken]) => ({
+                  seller,
+                  price,
+                  paymentToken,
+                }))
+                .catch(() => null)
+            )
           );
         });
-      const results = await readChunk(ids);
+      };
+      const results = await readBatch(ids);
       const failedIdx = [];
       for (let k = 0; k < ids.length; k++) {
         if (results[k] === null) failedIdx.push(k);
         else anyReadOk = true;
       }
       if (failedIdx.length > 0) {
-        const retry = await readChunk(failedIdx.map((k) => ids[k]));
+        const retry = await readBatch(failedIdx.map((k) => ids[k]));
         for (let j = 0; j < failedIdx.length; j++) {
           if (retry[j] !== null) {
             results[failedIdx[j]] = retry[j];
