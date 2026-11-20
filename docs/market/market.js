@@ -30,7 +30,6 @@ import {
   RPC_URLS,
   BSCSCAN_BASE,
   ZERO_ADDRESS,
-  SALE_START_LABEL,
   MAX_SHARES,
   TIERS,
   KONG_SALE_ABI,
@@ -492,7 +491,7 @@ function renderSaleStatus() {
   const note = $("countdown-note");
   if (phase === "upcoming") {
     label.textContent = t("countdownLabelUpcoming");
-    note.textContent = t("countdownNoteUpcoming", { start: SALE_START_LABEL });
+    note.textContent = t("countdownNoteUpcoming", { start: t("saleStartDate") });
   } else if (phase === "live") {
     label.textContent = t("countdownLabelLive");
     note.textContent = t("countdownNoteLive");

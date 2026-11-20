@@ -74,6 +74,7 @@ export const I18N = {
     countdownLabelStatus: "Status sale",
     countdownNoteInitial: "Sale dibuka 1 Desember 2026, 00:00 WIB.",
     countdownNoteUpcoming: "Sale dibuka {start}. Marketplace dibuka setelah pass pertama ada.",
+    saleStartDate: "1 Desember 2026, 00:00 WIB",
     countdownNoteLive:
       "Batas graduation: bila semua 10.000 share terjual sebelum ini, sale lulus dan klaim dibuka.",
     countdownNoteRefund:
@@ -379,6 +380,7 @@ export const I18N = {
     countdownLabelStatus: "Sale status",
     countdownNoteInitial: "Sale opens 1 December 2026, 00:00 WIB.",
     countdownNoteUpcoming: "Sale opens {start}. The marketplace opens after the first pass exists.",
+    saleStartDate: "1 December 2026, 00:00 WIB",
     countdownNoteLive:
       "Graduation deadline: if all 10,000 shares sell before this, the sale graduates and claiming opens.",
     countdownNoteRefund:
@@ -687,6 +689,7 @@ export const I18N = {
     countdownLabelStatus: "发售状态",
     countdownNoteInitial: "发售将于 2026 年 12 月 1 日 00:00 WIB 开始。",
     countdownNoteUpcoming: "发售开始于 {start}。首个通行证出现后市场开放。",
+    saleStartDate: "2026年12月1日 00:00 WIB",
     countdownNoteLive: "毕业截止：若在此之前全部 10,000 份售罄，发售即毕业并开放领取。",
     countdownNoteRefund: "发售未售罄——通行证持有者可在铸造页退回 100% USDT。",
     countdownNoteGraduated: "流动性池已上线——通行证可在铸造页领取 $KONG。",
