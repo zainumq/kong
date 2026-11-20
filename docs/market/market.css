@@ -135,3 +135,9 @@
   .filter-select { min-width: 0; flex: 1; }
   .filter-label { flex: 1 1 40%; }
 }
+
+/* Pemilih bahasa di header — lebar mengikuti isi, bukan selebar kolom. */
+.lang-select {
+  width: auto;
+  max-width: 9rem;
+}
