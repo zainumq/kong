@@ -41,11 +41,6 @@
   font-weight: 700;
 }
 
-.listing-card .listing-idr {
-  color: var(--text) !important;
-  font-weight: 600;
-}
-
 .listing-split { font-size: 0.85rem; }
 
 .listing-hint { color: var(--muted); font-size: 0.9rem; }

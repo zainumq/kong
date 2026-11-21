@@ -95,31 +95,20 @@ export const TIER_FLOORS = {
 };
 
 // ---------------------------------------------------------------------------
-// Kurs — basis USDT (bukan USD)
+// Kurs BNB/USDT — dipakai untuk mengurutkan listing campuran USDT/BNB
+// berdasarkan nilai yang sama (tidak ada tampilan IDR di halaman market).
 // ---------------------------------------------------------------------------
-// Halaman mint TIDAK menampilkan IDR sama sekali (hanya USDT/KONG), jadi
-// tidak ada pola kurs yang bisa diikuti dari sana. Halaman market memakai
-// USDT sebagai satuan kurs:
-//   1. USDT/IDR live dari CoinGecko (endpoint publik, tanpa API key):
-//      simple/price untuk tether dalam IDR.
-//   2. BNB/USDT live dari ticker spot Binance US (publik, tanpa API key,
-//      CORS terbuka): api.binance.us/api/v3/ticker/price?symbol=BNBUSDT.
-//      (CoinGecko TIDAK mendukung USDT sebagai vs_currency — simple/price
-//      diam-diam menghilangkan vs_currencies=usdt dan /coins/markets
-//      mengembalikan "invalid vs_currency"; api.binance.com diblokir
-//      geo dari sebagian lokasi, OKX tanpa header CORS — keduanya
-//      terverifikasi 20 Nov 2026.)
-//   3. BNB/IDR DITURUNKAN dari keduanya: BNB/USDT x USDT/IDR (bukan dari
-//      kurs BNB/IDR langsung) supaya semua konversi konsisten lewat USDT.
-// Bila salah satu API tidak terjangkau, kakinya memakai kurs ACUAN TETAP
-// di bawah ini (19 Nov 2026) dan halaman menampilkan catatan kurs acuan.
-// BNB_IDR acuan = 589,89 USDT x Rp18.265,5 = ~Rp10.774.636.
-export const COINGECKO_USDT_IDR_URL =
-  "https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=idr";
+// BNB/USDT live dari ticker spot Binance US (publik, tanpa API key,
+// CORS terbuka): api.binance.us/api/v3/ticker/price?symbol=BNBUSDT.
+// (CoinGecko TIDAK mendukung USDT sebagai vs_currency — simple/price
+// diam-diam menghilangkan vs_currencies=usdt dan /coins/markets
+// mengembalikan "invalid vs_currency"; api.binance.com diblokir
+// geo dari sebagian lokasi, OKX tanpa header CORS — keduanya
+// terverifikasi 20 Nov 2026.)
+// Bila API tidak terjangkau, memakai kurs ACUAN TETAP di bawah ini
+// (19 Nov 2026) dan halaman menampilkan catatan kurs acuan.
 export const BINANCE_US_BNB_USDT_URL =
   "https://api.binance.us/api/v3/ticker/price?symbol=BNBUSDT";
-export const USDT_IDR_FALLBACK = 18265.5;
-export const BNB_IDR_FALLBACK = 10774636;
 export const BNB_USDT_FALLBACK = 589.89;
 
 // ABI kontrak KongMarket — lihat catatan asumsi di atas.

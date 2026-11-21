@@ -46,10 +46,7 @@ import {
   MARKET_PASS_ABI,
   TIER_FLOORS,
   MARKET_FEE_BPS,
-  USDT_IDR_FALLBACK,
-  BNB_IDR_FALLBACK,
   BNB_USDT_FALLBACK,
-  COINGECKO_USDT_IDR_URL,
   BINANCE_US_BNB_USDT_URL,
 } from "./market-config.js";
 import { t, setLang, initLang, applyStaticI18n, numLocale } from "./i18n.js";
@@ -92,7 +89,6 @@ const fmtBnb = (value) =>
   })} BNB`;
 const fmtPrice = (price, paymentToken) =>
   isUsdt(paymentToken) ? fmtUsdt(price) : fmtBnb(price);
-const fmtIdr = (idr) => `Rp${Math.round(idr).toLocaleString(numLocale())}`;
 
 // ---------------------------------------------------------------------------
 // State
@@ -107,23 +103,15 @@ let busy = false; // sebuah transaksi sedang berjalan
 // Dibaca live di refreshSaleState; 18 adalah fallback yang benar.
 let usdtDecimals = 18;
 
-// Kurs berbasis USDT: USDT/IDR live dari CoinGecko, BNB/USDT live dari
-// ticker Binance US, BNB/IDR diturunkan (BNB/USDT x USDT/IDR). Bila satu
-// kaki gagal, kaki itu memakai kurs acuan tetap dari market-config.js
-// (19 Nov 2026). rates.live = kedua kaki live.
+// Kurs BNB/USDT live dari ticker Binance US. Bila API gagal, memakai kurs
+// acuan tetap dari market-config.js (19 Nov 2026). rates.live = kurs live.
 const rates = {
-  usdtIdr: USDT_IDR_FALLBACK,
-  bnbIdr: BNB_IDR_FALLBACK,
   bnbUsdt: BNB_USDT_FALLBACK,
   live: false,
 };
 
-// Nilai tukar harga listing ke IDR dan ke USDT (USDT dipakai untuk
-// mengurutkan listing campuran USDT/BNB berdasarkan nilai yang sama).
-const priceToIdr = (price, paymentToken) => {
-  const amount = Number(ethers.formatUnits(price, 18));
-  return isUsdt(paymentToken) ? amount * rates.usdtIdr : amount * rates.bnbIdr;
-};
+// Nilai tukar harga listing ke USDT (dipakai untuk mengurutkan listing
+// campuran USDT/BNB berdasarkan nilai yang sama).
 const priceToUsdt = (price, paymentToken) => {
   const amount = Number(ethers.formatUnits(price, 18));
   return isUsdt(paymentToken) ? amount : amount * rates.bnbUsdt;
@@ -604,13 +592,12 @@ function tickCountdown() {
 }
 
 // ---------------------------------------------------------------------------
-// Kurs berbasis USDT (CoinGecko USDT/IDR + Binance US BNB/USDT live,
-// fallback kurs acuan tetap — lihat market-config.js)
+// Kurs BNB/USDT (Binance US live, fallback kurs acuan tetap — lihat
+// market-config.js)
 // ---------------------------------------------------------------------------
 
 async function refreshRates() {
-  // Kedua kaki diambil independen — yang gagal memakai kurs acuan tetap,
-  // halaman tidak boleh gagal hanya karena satu API harga mati.
+  // Halaman tidak boleh gagal hanya karena API harga mati.
   const fetchJson = async (url) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
@@ -622,18 +609,7 @@ async function refreshRates() {
       clearTimeout(timeout);
     }
   };
-  let usdtLive = false;
   let bnbLive = false;
-  try {
-    const json = await fetchJson(COINGECKO_USDT_IDR_URL);
-    const usdtIdr = json?.tether?.idr;
-    if (typeof usdtIdr === "number" && usdtIdr > 0) {
-      rates.usdtIdr = usdtIdr;
-      usdtLive = true;
-    }
-  } catch {
-    // Tetap pakai USDT_IDR_FALLBACK.
-  }
   try {
     const json = await fetchJson(BINANCE_US_BNB_USDT_URL);
     const bnbUsdt = parseFloat(json?.price);
@@ -644,9 +620,7 @@ async function refreshRates() {
   } catch {
     // Tetap pakai BNB_USDT_FALLBACK.
   }
-  // BNB/IDR selalu diturunkan lewat USDT supaya konsisten.
-  rates.bnbIdr = rates.bnbUsdt * rates.usdtIdr;
-  rates.live = usdtLive && bnbLive;
+  rates.live = bnbLive;
   renderRatesNote();
   renderListings();
   renderMyPasses();
@@ -659,16 +633,8 @@ function renderRatesNote() {
     maximumFractionDigits: 2,
   });
   el.textContent = rates.live
-    ? t("ratesNoteLive", {
-        usdtIdr: fmtIdr(rates.usdtIdr),
-        bnbUsdt,
-        bnbIdr: fmtIdr(rates.bnbIdr),
-      })
-    : t("ratesNoteFallback", {
-        usdtIdr: fmtIdr(rates.usdtIdr),
-        bnbUsdt,
-        bnbIdr: fmtIdr(rates.bnbIdr),
-      });
+    ? t("ratesNoteLive", { bnbUsdt })
+    : t("ratesNoteFallback", { bnbUsdt });
 }
 
 // ---------------------------------------------------------------------------
@@ -1033,13 +999,6 @@ function buildListingCard(listing) {
   priceLine.textContent = fmtPrice(listing.price, listing.paymentToken);
   body.appendChild(priceLine);
 
-  const idrLine = document.createElement("p");
-  idrLine.className = "listing-idr";
-  idrLine.textContent = `≈ ${fmtIdr(
-    priceToIdr(listing.price, listing.paymentToken)
-  )}`;
-  body.appendChild(idrLine);
-
   const claimLine = document.createElement("p");
   claimLine.className = "pass-value";
   claimLine.textContent = t("claimValue", {
@@ -1177,7 +1136,6 @@ function renderBuyConfirm() {
   quote.className = "quote-box";
   const rows = [
     [t("quotePrice"), fmtPrice(pendingBuy.price, pendingBuy.paymentToken)],
-    [t("quoteIdr"), fmtIdr(priceToIdr(pendingBuy.price, pendingBuy.paymentToken))],
     [t("quoteMaxPrice"), fmtPrice(pendingBuy.price, pendingBuy.paymentToken)],
     [t("quoteSellerGets"), fmtPrice(pendingBuy.sellerGets, pendingBuy.paymentToken)],
     [t("quoteRoyalty"), fmtPrice(pendingBuy.royalty, pendingBuy.paymentToken)],
@@ -1307,7 +1265,6 @@ async function confirmBuy() {
           text: t("buyDone", {
             id: listing.tokenId,
             price: fmtPrice(listing.price, listing.paymentToken),
-            idr: fmtIdr(priceToIdr(listing.price, listing.paymentToken)),
           }),
         },
       ],
@@ -1592,12 +1549,6 @@ function buildListedControls(pass) {
       pass.listingPrice,
       pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
     ),
-    idr: fmtIdr(
-      priceToIdr(
-        pass.listingPrice,
-        pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-      )
-    ),
   });
   wrap.appendChild(status);
 
@@ -1640,12 +1591,6 @@ function buildListedControls(pass) {
     tier: meta_name(pass.tier),
     floor:
       pass.listingCurrency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
-    floorIdr: fmtIdr(
-      priceToIdr(
-        floor,
-        pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-      )
-    ),
     breakeven:
       pass.listingCurrency === "USDT"
         ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
@@ -1725,7 +1670,6 @@ function buildListForm(pass) {
     floorNote.textContent = t("floorNoteList", {
       tier: meta_name(pass.tier),
       floor: cur === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
-      floorIdr: fmtIdr(priceToIdr(floor, token)),
       breakeven:
         cur === "USDT"
           ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
@@ -1893,7 +1837,6 @@ async function listPassFlow(pass, rawPrice, currency, errNote) {
           text: t("listingPending", {
             id: pass.tokenId,
             price: fmtPrice(price, paymentToken),
-            idr: fmtIdr(priceToIdr(price, paymentToken)),
           }),
         },
       ],
