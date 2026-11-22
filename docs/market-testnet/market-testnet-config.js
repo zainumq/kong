@@ -8,7 +8,11 @@
 // =============================================================================
 // STATUS: SEMUA KONTRAK TESTNET SUDAH LIVE (19-20 Nov 2026)
 // =============================================================================
-//   KongMarket (testnet)  0x60Ef77Fc2961bc3BE20198aE2Fd90751F6a1530b
+//   KongMarketOracle (testnet) 0x0c537BC6b9b9FD26e6B76683D05FD43C32f33ec2
+//                         (floor BNB dinamis via Chainlink BNB/USD; deploy 22 Nov 2026)
+//   KongMarket v1 (testnet) 0x60Ef77Fc2961bc3BE20198aE2Fd90751F6a1530b
+//                         (DIGANTI Oracle 22 Nov 2026 — kontrak lama tetap live dan
+//                         masih memegang listing Pass #5 user @ 15 test USDT)
 //   Mock KongMintPass     0xfB10858719919f0eA3149F2c25CBe52086dF9984
 //   MockUSDT (mint publik) 0x41de1C38502d5Ae2672470620Ac183Db566dde8A
 //   KongTestPassDispenser #2 0xE40421FD8f1b1Bce85c02F3b3FEaF915dffE029A
@@ -24,14 +28,14 @@
 //   tanpa uang sungguhan.
 
 // --- Kontrak testnet (BSC Testnet, chain 97) ---
-export const MARKET_ADDRESS = "0x60Ef77Fc2961bc3BE20198aE2Fd90751F6a1530b";
+export const MARKET_ADDRESS = "0x0c537BC6b9b9FD26e6B76683D05FD43C32f33ec2";
 export const KONG_PASS_ADDRESS = "0xfB10858719919f0eA3149F2c25CBe52086dF9984";
 export const USDT_ADDRESS = "0x41de1C38502d5Ae2672470620Ac183Db566dde8A";
 export const DISPENSER_ADDRESS = "0xE40421FD8f1b1Bce85c02F3b3FEaF915dffE029A";
 
-// Blok deploy KongMarket testnet (tx 0xd49c7f2b…, 19 Nov 2026) — untuk
-// query event; tanpa ini fallback eth_getLogs RPC tidak bisa jalan.
-export const MARKET_DEPLOY_BLOCK = 143607264;
+// Blok deploy KongMarketOracle testnet (tx 0xe6120ab1…, 22 Nov 2026) —
+// untuk query event; tanpa ini fallback eth_getLogs RPC tidak bisa jalan.
+export const MARKET_DEPLOY_BLOCK = 144109508;
 
 // Faucet tBNB resmi (butuh saldo mainnet ≥0,002 BNB di alamat yang sama +
 // hCaptcha — lihat halaman). Alternatif: faucet QuickNode (syarat sama).
@@ -76,19 +80,21 @@ export const BSCSCAN_API_KEY = "";
 // estimasi pembagian di UI; pembagian sebenarnya ditegakkan kontrak.
 export const MARKET_FEE_BPS = 100;
 
-// Floor harga per tier — SAMA dengan mainnet (terverifikasi on-chain
-// testnet 19 Nov 2026: floorOf(1, USDT) = 1e18, floorOf(3, BNB) =
-// 0,00339 BNB). Nilai dalam desimal manusia; parseUnits(value, 18).
+// Floor harga per tier. USDT tetap (sama dengan mainnet, immutable di
+// kontrak). BNB DINAMIS: dibaca live dari floorOf() kontrak oracle
+// (Chainlink BNB/USD) — nilai bnb di bawah ini hanya FALLBACK bila
+// pembacaan live gagal (nilai per 22 Nov 2026, BNB ~$547,59).
+// Nilai dalam desimal manusia; parseUnits(value, 18).
 export const TIER_FLOORS = {
-  1: { usdt: "1", bnb: "0.0017" },
-  2: { usdt: "1.5", bnb: "0.00254" },
-  3: { usdt: "2", bnb: "0.00339" },
+  1: { usdt: "1", bnb: "0.001826" },
+  2: { usdt: "1.5", bnb: "0.002739" },
+  3: { usdt: "2", bnb: "0.003652" },
 };
 
 // Angka acuan tBNB dalam USD — HANYA dipakai sebagai proksi pengurutan
 // listing campuran USDT/BNB (priceToUsd). BUKAN harga riil dan tidak
 // pernah ditampilkan sebagai nilai uang di halaman testnet.
-export const SORT_BNB_USD = 589.89;
+export const SORT_BNB_USD = 547.59; // perkiraan 22 Nov 2026
 
 // Scan ownerOf untuk "Pass saya": tokenId 1..cap. Stok dispenser #2
 // 1.000 pass (#33-1032); cap 1200 memberi ruang untuk dispenser
@@ -137,9 +143,9 @@ export const TIERS = [
   },
 ];
 
-// ABI KongMarket — salinan persis dari market-config.js mainnet
-// (terverifikasi terhadap src/KongMarket.sol; kontrak testnet adalah
-// bytecode yang sama).
+// ABI KongMarketOracle (terverifikasi terhadap
+// src/KongMarketOracle.sol; floorOf + StalePrice adalah tambahan oracle
+// yang tidak ada di KongMarket v1).
 export const KONG_MARKET_ABI = [
   "function list(uint256 tokenId, uint256 price, address paymentToken)",
   "function updatePrice(uint256 tokenId, uint256 newPrice)",
@@ -147,6 +153,7 @@ export const KONG_MARKET_ABI = [
   "function buy(uint256 tokenId, uint256 maxPrice) payable",
   "function sweepFees(address token)",
   "function listingOf(uint256 tokenId) view returns (address seller, uint256 price, address paymentToken)",
+  "function floorOf(uint8 tier, address paymentToken) view returns (uint256)",
   "event Listed(address indexed seller, uint256 indexed tokenId, uint256 price, address paymentToken)",
   "event PriceUpdated(uint256 indexed tokenId, uint256 newPrice)",
   "event Cancelled(uint256 indexed tokenId)",
@@ -157,6 +164,7 @@ export const KONG_MARKET_ABI = [
   "error InvalidPrice()",
   "error InvalidFloor()",
   "error BelowFloor()",
+  "error StalePrice()",
   "error NotPassOwner()",
   "error NotSeller()",
   "error NoListing()",

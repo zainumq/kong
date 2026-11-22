@@ -292,8 +292,58 @@ function tierOfShare(shareNumber) {
   return 3;
 }
 
-/** Floor tier dalam raw unit (18 desimal) untuk mata uang tertentu. */
+// ---------------------------------------------------------------------------
+// Floor BNB live dari oracle (KongMarketOracle)
+// ---------------------------------------------------------------------------
+// floorOf() BNB dibaca on-chain saat halaman dimuat; nilai statis
+// TIER_FLOORS hanya fallback bila RPC gagal. Sel tabel tier + catatan
+// floor di form listing memakai nilai live ini.
+const liveBnbFloors = { 1: null, 2: null, 3: null };
+
+function fmtLiveBnbFloor(value) {
+  return `~${Number(ethers.formatUnits(value, 18)).toLocaleString(numLocale(), {
+    maximumFractionDigits: 6,
+  })} tBNB`;
+}
+
+function applyLiveBnbFloors() {
+  for (const tier of [1, 2, 3]) {
+    const live = liveBnbFloors[tier];
+    if (live === null) continue;
+    const cell = document.querySelector(`[data-i18n="tier${tier}Bnb"]`);
+    if (cell) cell.textContent = fmtLiveBnbFloor(live);
+  }
+}
+
+async function refreshBnbFloors() {
+  try {
+    const floors = await withReadProvider(async (provider) => {
+      const market = marketContract(provider);
+      return Promise.all([
+        market.floorOf(1, ZERO_ADDRESS),
+        market.floorOf(2, ZERO_ADDRESS),
+        market.floorOf(3, ZERO_ADDRESS),
+      ]);
+    });
+    liveBnbFloors[1] = floors[0];
+    liveBnbFloors[2] = floors[1];
+    liveBnbFloors[3] = floors[2];
+    applyLiveBnbFloors();
+    renderMyPasses();
+  } catch (err) {
+    // Fallback statis TIER_FLOORS tetap dipakai; gagal baca oracle
+    // tidak boleh memecahkan halaman.
+    console.warn("[market-testnet] gagal baca floor BNB live:", err);
+  }
+}
+
+/** Floor tier dalam raw unit (18 desimal) untuk mata uang tertentu.
+ *  BNB memakai nilai live dari oracle bila sudah terbaca; USDT selalu
+ *  statis (immutable di kontrak). */
 function floorRaw(tier, currency) {
+  if (currency === "BNB" && liveBnbFloors[tier] !== null) {
+    return liveBnbFloors[tier];
+  }
   const floor = TIER_FLOORS[tier];
   return ethers.parseUnits(currency === "BNB" ? floor.bnb : floor.usdt, 18);
 }
@@ -2123,6 +2173,7 @@ async function init() {
     renderListings();
     renderMyPasses();
     renderBuyConfirm();
+    applyLiveBnbFloors();
   });
 
   wireWalletEvents();
@@ -2130,7 +2181,7 @@ async function init() {
   // Muat panel testnet + listing secara paralel (keduanya jalan tanpa
   // wallet dan independen), lalu polling panel testnet tiap menit.
   // Sebelumnya berurutan — listing menunggu panel (~25 detik) dulu.
-  await Promise.all([refreshTestnetPanel(), loadListings()]);
+  await Promise.all([refreshTestnetPanel(), loadListings(), refreshBnbFloors()]);
   setInterval(refreshTestnetPanel, 60_000);
 
   // Reconnect diam-diam bila wallet sudah pernah diotorisasi (tanpa prompt).
