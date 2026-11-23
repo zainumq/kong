@@ -25,6 +25,7 @@ import {
   RPC_URLS,
   BSCSCAN_BASE,
   ZERO_ADDRESS,
+  SALE_START,
   SALE_START_LABEL,
   MAX_SHARES,
   MAX_PER_WALLET,
@@ -1563,6 +1564,10 @@ async function init() {
   renderMintForm();
   renderReferral();
   renderPassLists();
+
+  // Pre-sale waitlist: visible only until the sale opens.
+  const waitlist = document.getElementById("waitlist-section");
+  if (waitlist && Date.now() < SALE_START * 1000) waitlist.hidden = false;
 
   // Prefill the referrer from ?ref= (referral links), then validate it.
   const urlRef = readRefFromUrl();
