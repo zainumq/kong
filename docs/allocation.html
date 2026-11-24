@@ -117,6 +117,49 @@
       </p>
     </section>
 
+    <section aria-label="Distribution rules">
+      <h2>How the 33M community distribution is calculated</h2>
+      <p class="section-note">
+        All three pools pay out of the Merkle distributor above, pro-rata from
+        a snapshot taken at the graduation block — the block where the
+        10,000th share sells and the pool forms. No graduation, no
+        distribution.
+      </p>
+      <ul class="facts">
+        <li><strong>Holder airdrop — 10,000,000 KONG:</strong> split strictly
+        per badge, not per wallet. Each badge is one share of the pool, so a
+        wallet holding 4 badges gets 4 shares and a wallet holding 1 gets 1.
+        Per-badge share = 10,000,000 ÷ total badges at the snapshot block.
+        Badges are soulbound, max 4 per wallet.</li>
+        <li><strong>Buyer bonus — 20,000,000 KONG cap:</strong> badge holders
+        who buy shares get +20% extra KONG on their claimable. If total
+        bonuses exceed the 20M pool, every bonus scales down by the same
+        pro-rata factor. This stacks with the 3% referral already in the sale
+        contract.</li>
+        <li><strong>Streak pool — 3,000,000 KONG:</strong> split pro-rata by
+        total check-in days at graduation. A missed UTC day resets the streak,
+        but never the total check-in days.</li>
+        <li><strong>Verification:</strong> before the root is set (target:
+        within 7 days of graduation), the full tree data is published in the
+        <a href="https://github.com/zainumq/kong">kong repo</a> and on this
+        site: the graduation block, the total badge count, every wallet's
+        three amounts, the bonus pool total and scaling factor, and the leaf
+        and proof for each address. The tree data goes public at least 3 days
+        before the root is set, so holders have time to check their amounts
+        and raise issues before anything is locked in. The calculation code is published with it
+        — the tree builder (<code>kong/script/build-tree.py</code>) is already
+        public, and the snapshot calculation follows before the root is set —
+        so anyone can reproduce every amount from the snapshot block. The
+        tree is built twice, by two independent implementations, and both
+        roots must match before the root is set. The scanned badge total must
+        also equal <code>nextTokenId − 1</code> of AgentQuest at the snapshot
+        block.</li>
+        <li><strong>Claims:</strong> gas-only, no fee. Claim window is 180
+        days after the root is set; unclaimed funds can be swept by the owner
+        only after that window.</li>
+      </ul>
+    </section>
+
     <section aria-label="Notes">
       <h2>Notes</h2>
       <ul class="facts">
