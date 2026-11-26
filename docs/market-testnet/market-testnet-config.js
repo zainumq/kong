@@ -6,13 +6,23 @@
 // supaya satu file ini cukup untuk mengubah seluruh wiring testnet.
 //
 // =============================================================================
-// STATUS: SEMUA KONTRAK TESTNET SUDAH LIVE (19-20 Nov 2026)
+// STATUS: MARKET TESTNET v2 — FEE DISTRIBUTOR TER-WIRE (26 Nov 2026)
 // =============================================================================
-//   KongMarketOracle (testnet) 0x0c537BC6b9b9FD26e6B76683D05FD43C32f33ec2
-//                         (floor BNB dinamis via Chainlink BNB/USD; deploy 22 Nov 2026)
+//   KongMarketOracle (testnet) 0xad8bd4be04983b99020a17e9be31f4e700ff9650
+//                         (floor BNB dinamis via Chainlink BNB/USD; deploy 26 Nov 2026,
+//                          blok 144829604, tx 0x6a9073e3…; treasury = FeeDistributor
+//                          0x418FF609b23Fe3086db9A851E4D3f4521cE193F8, ter-wire
+//                          setMarket + setMarketPass 26 Nov ~08:02 WIB)
+//   KongMarketPass (testnet) 0x78654735c0035f3b8d37c96e5232e9646e5fc8ed
+//                         (deploy 26 Nov 2026, blok 144828628; distributor =
+//                          FeeDistributor di atas; DUPLIKAT 0xdd83ba1e… JANGAN dipakai)
+//   Oracle LAMA 0x0c537BC6b9b9FD26e6B76683D05FD43C32f33ec2 (deploy 22 Nov 2026)
+//                         PENSIUN — treasury-nya deployer testnet (bukan
+//                         FeeDistributor), tidak bisa di-wire; halaman ini
+//                         sekarang mengarah ke market baru di atas.
 //   KongMarket v1 (testnet) 0x60Ef77Fc2961bc3BE20198aE2Fd90751F6a1530b
 //                         (DIGANTI Oracle 22 Nov 2026 — kontrak lama tetap live dan
-//                         masih memegang listing Pass #5 user @ 15 test USDT)
+//                         masih memegang listing Pass #5 user @ 40 test USDT)
 //   Mock KongMintPass     0xfB10858719919f0eA3149F2c25CBe52086dF9984
 //   MockUSDT (mint publik) 0x41de1C38502d5Ae2672470620Ac183Db566dde8A
 //   KongTestPassDispenser #2 0xE40421FD8f1b1Bce85c02F3b3FEaF915dffE029A
@@ -28,14 +38,14 @@
 //   tanpa uang sungguhan.
 
 // --- Kontrak testnet (BSC Testnet, chain 97) ---
-export const MARKET_ADDRESS = "0x0c537BC6b9b9FD26e6B76683D05FD43C32f33ec2";
+export const MARKET_ADDRESS = "0xad8bd4be04983b99020a17e9be31f4e700ff9650";
 export const KONG_PASS_ADDRESS = "0xfB10858719919f0eA3149F2c25CBe52086dF9984";
 export const USDT_ADDRESS = "0x41de1C38502d5Ae2672470620Ac183Db566dde8A";
 export const DISPENSER_ADDRESS = "0xE40421FD8f1b1Bce85c02F3b3FEaF915dffE029A";
 
-// Blok deploy KongMarketOracle testnet (tx 0xe6120ab1…, 22 Nov 2026) —
+// Blok deploy KongMarketOracle testnet BARU (tx 0x6a9073e3…, 26 Nov 2026) —
 // untuk query event; tanpa ini fallback eth_getLogs RPC tidak bisa jalan.
-export const MARKET_DEPLOY_BLOCK = 144109508;
+export const MARKET_DEPLOY_BLOCK = 144829604;
 
 // Faucet tBNB resmi (butuh saldo mainnet ≥0,002 BNB di alamat yang sama +
 // hCaptcha — lihat halaman). Alternatif: faucet QuickNode (syarat sama).
