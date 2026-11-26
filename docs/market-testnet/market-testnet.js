@@ -1668,6 +1668,14 @@ function buildListForm(pass) {
 
   const floorNote = document.createElement("p");
   floorNote.className = "floor-note";
+  // Peringatan fee BNB: default mata uang listing adalah USDT (select di
+  // bawah diinisialisasi ke "USDT"); bila pengguna memilih BNB, tampilkan
+  // peringatan bahwa fee 1% BNB tertahan di kontrak market (FeeDistributor
+  // hanya menyapu fee USDT) — temuan uji acak 26 Nov 2026.
+  const bnbWarn = document.createElement("p");
+  bnbWarn.className = "referrer-note note-bad";
+  bnbWarn.textContent = t("bnbFeeWarning");
+  bnbWarn.hidden = true;
   const updateFloorNote = () => {
     const cur = select.value;
     const floor = floorRaw(pass.tier, cur);
@@ -1680,6 +1688,7 @@ function buildListForm(pass) {
           ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
           : fmtBnb(breakevenRaw(pass.tier, "BNB")),
     });
+    bnbWarn.hidden = cur !== "BNB";
   };
   select.addEventListener("change", () => {
     currencyDrafts.set(draftKey, select.value);
@@ -1687,6 +1696,7 @@ function buildListForm(pass) {
   });
   updateFloorNote();
   wrap.appendChild(floorNote);
+  wrap.appendChild(bnbWarn);
 
   const errNote = document.createElement("p");
   errNote.className = "referrer-note note-bad";

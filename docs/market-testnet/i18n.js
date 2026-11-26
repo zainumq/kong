@@ -279,6 +279,8 @@ export const I18N = {
     pricePlaceholder: "cth: 2",
     floorNoteList:
       "Floor {tier}: {floor} · Harga impas (terima bersih = harga mint): {breakeven} · Potongan per penjualan: royalti 5% + fee 1%.",
+    bnbFeeWarning:
+      "Perhatian: penjualan dalam BNB — fee 1% dalam BNB tertahan di kontrak market dan tidak bisa disapu ke FeeDistributor (hanya fee USDT yang dibagi 50/30/20). Disarankan memakai USDT.",
     listPassBtn: "List pass",
     invalidPrice: "Harga tidak valid — isi angka, mis. 2 atau 1,5.",
     belowFloor: "Harga di bawah floor {tier}: minimum {min}.",
@@ -603,6 +605,8 @@ export const I18N = {
     pricePlaceholder: "e.g. 2",
     floorNoteList:
       "Floor {tier}: {floor} · Breakeven price (net received = mint price): {breakeven} · Cut per sale: royalty 5% + fee 1%.",
+    bnbFeeWarning:
+      "Note: for BNB sales, the 1% fee in BNB stays in the market contract and cannot be swept to the FeeDistributor (only USDT fees are split 50/30/20). USDT is recommended.",
     listPassBtn: "List pass",
     invalidPrice: "Invalid price — enter a number, e.g. 2 or 1.5.",
     belowFloor: "Price below the {tier} floor: minimum {min}.",
@@ -894,6 +898,8 @@ export const I18N = {
     pricePlaceholder: "例如：2",
     floorNoteList:
       "{tier} 底价：{floor} · 保本价（净收入 = 铸造价）：{breakeven} · 每笔销售扣除：版税 5% + 手续费 1%。",
+    bnbFeeWarning:
+      "注意：以 BNB 结算时，1% 的 BNB 手续费会滞留在市场合约中，无法归集到 FeeDistributor（仅 USDT 手续费按 50/30/20 分配）。建议使用 USDT。",
     listPassBtn: "上架通行证",
     invalidPrice: "价格无效——请输入数字，例如 2 或 1.5。",
     belowFloor: "价格低于 {tier} 底价：最低 {min}。",
