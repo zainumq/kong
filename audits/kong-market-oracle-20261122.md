@@ -16,7 +16,7 @@ floor math) + live feed verification on both chains + testnet deployment e2e
 | Critical | 0 |
 | High | 0 |
 | Medium | 1 (mitigated in the deploy script — see M-1) |
-| Low | 3 |
+| Low | 4 |
 | Info | 6 |
 
 **No finding blocks the testnet deployment.** For mainnet, M-1's residual risk is
@@ -96,6 +96,21 @@ time and re-list when the feed recovers, and USDT listings are unaffected.
 Fail-closed by design; the alternative (repricing against a stale floor)
 would defeat the floor's purpose.
 **Status: accepted by design, documented in NatSpec.**
+
+### L-4 (Low): BNB-denominated sale fees are stranded in the market
+`buy` with a BNB listing leaves the 1% fee in BNB inside the market
+contract. The fee can only leave via `sweepFees(address(0))`, which
+reverts unless called by the treasury — the FeeDistributor — and the
+FeeDistributor's `sweep()` only ever calls `sweepFees(address(usdt))`
+while `split()` accounts USDT only. No function anywhere calls the BNB
+sweep, and both contracts are immutable, so BNB fees are permanently
+stranded (1% of BNB-denominated volume only; USDT trades — the market's
+unit of account — are unaffected and split 50/30/20 as documented).
+Proven on testnet 26 Nov 2026 (random fee-flow test): one BNB sale left
+exactly 1% of the price (0.0000269851 tBNB) in the market, unsweepable.
+**Status: accepted with mitigation — the market UI defaults listings to
+USDT and warns when BNB is selected (26 Nov 2026); documented in
+FeeDistributor NatSpec and the pass rulebook.**
 
 ### I-1 (Info): Floor division rounds down
 `floorUsdt * 1e8 / price` uses integer division, so the BNB floor is at
