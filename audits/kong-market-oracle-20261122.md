@@ -248,3 +248,45 @@ Frontends may also call the feed directly. No risk.
   (~$0.04 at BNB $547.59). Deploy via the same script with
   EXPECTED_CHAIN_ID=56 — the script refuses a mainnet deploy with
   maxStaleness > 3600 (audit M-1 guard).
+
+---
+
+## Addendum — 26 Nov 2026: market rewritten USDT-only (Option 2)
+
+The contract audited above (oracle version) is **retired**. A random
+fee-flow test on 26 Nov 2026 proved L-4 live (one BNB sale left exactly
+0.0000269851 tBNB, 1% of the price, stranded in the market). Option 1
+(UI default USDT + warning) was chosen first that morning, then replaced
+by Option 2 at 10:09 WIB: remove BNB payment from the contract and
+redeploy the full testnet stack.
+
+The new `KongMarketOracle.sol` (same filename, USDT-only) removes the
+Chainlink feed, `latestBnbPrice`/`_latestPrice`, `StalePrice`,
+`_sendBnb`, the BNB branch of `buy()` (now non-payable), and the BNB
+branch of `sweepFees()`. `list()`/`floorOf()` revert
+`InvalidPaymentToken()` for anything but USDT.
+
+**Findings closed or moot for the new contract:**
+- **M-1 — MOOT.** No feed, no `maxStaleness`, no per-chain footgun.
+- **L-4 — CLOSED.** No BNB payment path exists, so no BNB fee can strand.
+- **I-1, I-2 — MOOT.** No BNB floor math remains (no division, no
+  floor-to-zero case).
+
+**New-contract verdict: C0 / H0 / M0 / L3 / I4.** The remaining findings
+(L-1..L-3, I-3..I-6) are unchanged — the rest of the contract is carried
+over verbatim from the audited version.
+
+**Verification of the rewrite (26 Nov 2026):** full forge suite
+210 passed / 0 failed / 2 skipped (delta vs the 224-test baseline is
+exactly the 14 removed oracle BNB tests); fee-flow retest on testnet —
+mock pass T3 #1033 sold @ 2 USDT, 0.02 USDT fee split exactly 50/30/20
+(holder 0.01 / builder 0.006 / rebate 0.004), and list / floorOf / buy
+with value / `sweepFees(BNB)` all revert; all three new contracts
+verified BscScan + Sourcify (FD 0x33aA…201C, Pass 0xD03E…89BDc, Market
+0x0e5a…d32). The old market (0xad8b…) is retired; its stranded
+0.0000269851 tBNB is unrecoverable testnet dust.
+
+**Note:** the "Mainnet deploy parameters" section above is obsolete for
+the new contract — no feed address, no `maxStaleness`. The mainnet deploy
+uses the USDT-only constructor `(pass, usdt, treasury, floorUsdt [1, 1.5,
+2])` and happens after the $KONG sale opens (1 Dec 2026).

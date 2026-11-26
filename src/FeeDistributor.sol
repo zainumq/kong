@@ -20,21 +20,23 @@ interface IKongMarketSweep {
 ///         25 Nov 2026): rebates first, referral rewards from the
 ///         remainder, both paid out monthly via Merkle (v1.1 wiring).
 ///
-///         KNOWN LIMITATION (proven on testnet 26 Nov 2026, random
-///         fee-flow test): only USDT fees reach this contract.
-///         `sweep()` calls `market.sweepFees(address(usdt))` only, and
-///         `split()` accounts USDT only. A BNB-denominated sale leaves
-///         its 1% fee in BNB inside the market; `sweepFees(address(0))`
-///         can only be called by this contract as treasury, and no
-///         function here ever calls it — so BNB fees are permanently
-///         stranded in the market (1% of BNB-denominated volume only;
-///         the trade itself executes correctly). Mitigation chosen
-///         26 Nov 2026: the market UI defaults listings to USDT and
-///         warns when BNB is selected; documented here, in the
-///         market-oracle audit (L-4), and in the pass rulebook
-///         (aturan-main section 11). Removing BNB from the market
-///         would need a full stack redeploy (this contract's market
-///         is set once); that option was considered and deferred.
+///         HISTORICAL NOTE (closed 26 Nov 2026): the market used to
+///         accept BNB-denominated sales, and a BNB sale's 1% fee was
+///         stranded in the market — `sweep()` only ever called
+///         `market.sweepFees(address(usdt))` and `split()` accounts USDT
+///         only, while `sweepFees(address(0))` could only be called by
+///         this contract as treasury and no function here ever called it
+///         (proven on testnet 26 Nov 2026: one BNB sale left exactly
+///         0.0000269851 tBNB, 1% of the price, unsweepable). The market
+///         contract was rewritten USDT-only (KongMarketOracle, testnet
+///         26 Nov 2026): `list()`/`floorOf()` revert `InvalidPaymentToken()`
+///         for anything but USDT, `buy()` is non-payable, and the oracle
+///         price feed was removed — so there is no BNB fee path left to
+///         strand, and this contract sweeps USDT by construction.
+///         Re-verified 26 Nov 2026: a 2 USDT sale's 0.02 USDT fee split
+///         exactly 50/30/20, and list/floor/buy/sweepFees with BNB all
+///         revert. (NatSpec-only change: no bytecode change; the deployed
+///         testnet contract keeps its earlier verification.)
 ///
 ///         TESTNET BUILD (25 Nov 2026, user order: "build testnet aja dulu").
 ///         Mainnet deploy is NOT part of this build.
