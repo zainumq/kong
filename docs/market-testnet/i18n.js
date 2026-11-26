@@ -104,10 +104,10 @@ export const I18N = {
     howTitle: "Cara kerja",
     howListVerb: "List",
     howListText:
-      " — approve kontrak market atas pass Anda, lalu tentukan harga (test USDT atau tBNB). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.",
+      " — approve kontrak market atas pass Anda, lalu tentukan harga (test USDT). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.",
     howBuyVerb: "Beli",
     howBuyText:
-      " — untuk listing test USDT, approve test USDT sebesar harga dulu; untuk listing tBNB, tBNB dikirim bersama transaksi beli. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.",
+      " — untuk listing test USDT, approve test USDT sebesar harga dulu. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.",
     howUpdateVerb: "Ubah / batal",
     howUpdateText:
       " — penjual bisa mengubah harga atau membatalkan listing kapan saja (biaya gas tBNB saja).",
@@ -117,19 +117,15 @@ export const I18N = {
     floorTableTitle: "Floor harga per tier (testnet — sama dengan mainnet)",
     thTier: "Tier",
     thFloorUsdt: "Floor test USDT",
-    thFloorBnb: "Floor tBNB (live)",
     thBreakeven: "Harga impas*",
     tier1Usdt: "1 test USDT",
-    tier1Bnb: "~0,001826 tBNB",
     tier1Be: "1,064 test USDT",
     tier2Usdt: "1,5 test USDT",
-    tier2Bnb: "~0,002739 tBNB",
     tier2Be: "1,596 test USDT",
     tier3Usdt: "2 test USDT",
-    tier3Bnb: "~0,003652 tBNB",
     tier3Be: "2,128 test USDT",
     breakevenNote:
-      "* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%). Floor tBNB mengikuti harga Chainlink secara live.",
+      "* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%).",
     splitTableTitle: "Contoh pembagian — penjualan 2 test USDT",
     thPart: "Bagian",
     thAmount: "Besaran",
@@ -236,8 +232,6 @@ export const I18N = {
     quoteSeller: "Penjual",
     payUsdtNote:
       "Pembayaran USDT: bila allowance belum cukup, Anda akan diminta menyetujui (approve) USDT sebesar harga dulu — lalu transaksi beli menyusul. Keduanya perlu konfirmasi di wallet.",
-    payBnbNote:
-      "Pembayaran BNB: BNB sebesar harga dikirim bersama transaksi beli — tanpa approve terpisah.",
     maxPriceWarn:
       "Pembelian dilindungi batas harga maksimum: bila harga listing berubah naik di atas harga di atas sebelum transaksi diproses, transaksi dibatalkan otomatis dan Anda tidak membayar lebih. Listing diverifikasi ulang tepat sebelum transaksi dikirim.",
     confirmBuyBtn: "Konfirmasi beli — {price}",
@@ -279,8 +273,6 @@ export const I18N = {
     pricePlaceholder: "cth: 2",
     floorNoteList:
       "Floor {tier}: {floor} · Harga impas (terima bersih = harga mint): {breakeven} · Potongan per penjualan: royalti 5% + fee 1%.",
-    bnbFeeWarning:
-      "Perhatian: penjualan dalam BNB — fee 1% dalam BNB tertahan di kontrak market dan tidak bisa disapu ke FeeDistributor (hanya fee USDT yang dibagi 50/30/20). Disarankan memakai USDT.",
     listPassBtn: "List pass",
     invalidPrice: "Harga tidak valid — isi angka, mis. 2 atau 1,5.",
     belowFloor: "Harga di bawah floor {tier}: minimum {min}.",
@@ -313,7 +305,7 @@ export const I18N = {
       "Blok deploy kontrak market belum diisi di konfigurasi — fallback RPC tidak bisa berjalan.",
     errUserRejected: "Transaksi ditolak di wallet. Tidak ada yang terkirim.",
     errInsufficientFunds:
-      "tBNB di wallet tidak cukup untuk gas (atau untuk pembayaran tBNB). Klaim tBNB gratis di faucet testnet.",
+      "tBNB di wallet tidak cukup untuk gas. Klaim tBNB gratis di faucet testnet.",
     errNoListing: "Listing tidak ditemukan — mungkin sudah terjual atau dibatalkan.",
     errNotSeller: "Hanya penjual yang bisa mengubah atau membatalkan listing ini.",
     errBelowFloor: "Harga di bawah floor tier pass ini.",
@@ -326,7 +318,7 @@ export const I18N = {
     errValueNotAllowed: "Pembelian USDT tidak boleh mengirim BNB.",
     errInvalidPrice: "Harga tidak valid.",
     errInvalidPaymentToken:
-      "Mata uang pembayaran tidak valid (hanya USDT atau BNB).",
+      "Mata uang pembayaran tidak valid (hanya USDT).",
     errNotTreasury: "Hanya treasury yang bisa menarik fee yang terkumpul.",
     errNothingToSweep: "Tidak ada fee yang terkumpul untuk ditarik.",
     errPriceAboveMax:
@@ -422,10 +414,10 @@ export const I18N = {
     howTitle: "How it works",
     howListVerb: "List",
     howListText:
-      " — approve the market contract for your pass, then set a price (test USDT or tBNB). The price cannot go below the tier floor. The pass stays in your wallet.",
+      " — approve the market contract for your pass, then set a price (test USDT). The price cannot go below the tier floor. The pass stays in your wallet.",
     howBuyVerb: "Buy",
     howBuyText:
-      " — for test USDT listings, approve test USDT for the price first; for tBNB listings, tBNB is sent with the buy transaction. Funds split automatically in one transaction: seller 94%, royalty 5% to treasury, fee 1% held in the market contract. Purchases are protected by a maximum price: if the listing price rises above the displayed price before the transaction is processed, the transaction is cancelled automatically.",
+      " — for test USDT listings, approve test USDT for the price first. Funds split automatically in one transaction: seller 94%, royalty 5% to treasury, fee 1% held in the market contract. Purchases are protected by a maximum price: if the listing price rises above the displayed price before the transaction is processed, the transaction is cancelled automatically.",
     howUpdateVerb: "Change / cancel",
     howUpdateText:
       " — the seller can change the price or cancel the listing at any time (tBNB gas only).",
@@ -435,19 +427,15 @@ export const I18N = {
     floorTableTitle: "Price floor per tier (testnet — same as mainnet)",
     thTier: "Tier",
     thFloorUsdt: "Test USDT floor",
-    thFloorBnb: "tBNB floor (live)",
     thBreakeven: "Breakeven price*",
     tier1Usdt: "1 test USDT",
-    tier1Bnb: "~0.001826 tBNB",
     tier1Be: "1.064 test USDT",
     tier2Usdt: "1.5 test USDT",
-    tier2Bnb: "~0.002739 tBNB",
     tier2Be: "1.596 test USDT",
     tier3Usdt: "2 test USDT",
-    tier3Bnb: "~0.003652 tBNB",
     tier3Be: "2.128 test USDT",
     breakevenNote:
-      "* Breakeven price: the sale price at which the seller nets exactly the mint price after the 6% cut (royalty 5% + fee 1%). tBNB floors track the live Chainlink price.",
+      "* Breakeven price: the sale price at which the seller nets exactly the mint price after the 6% cut (royalty 5% + fee 1%).",
     splitTableTitle: "Split example — a 2 test USDT sale",
     thPart: "Part",
     thAmount: "Amount",
@@ -559,8 +547,6 @@ export const I18N = {
     quoteSeller: "Seller",
     payUsdtNote:
       "USDT payment: if your allowance is not enough yet, you will first be asked to approve USDT for the price — then the buy transaction follows. Both need confirmation in your wallet.",
-    payBnbNote:
-      "BNB payment: BNB for the price is sent with the buy transaction — no separate approval.",
     maxPriceWarn:
       "Your purchase is protected by a maximum price: if the listing price rises above the price above before the transaction is processed, the transaction is cancelled automatically and you do not pay more. The listing is re-verified right before the transaction is sent.",
     confirmBuyBtn: "Confirm buy — {price}",
@@ -605,8 +591,6 @@ export const I18N = {
     pricePlaceholder: "e.g. 2",
     floorNoteList:
       "Floor {tier}: {floor} · Breakeven price (net received = mint price): {breakeven} · Cut per sale: royalty 5% + fee 1%.",
-    bnbFeeWarning:
-      "Note: for BNB sales, the 1% fee in BNB stays in the market contract and cannot be swept to the FeeDistributor (only USDT fees are split 50/30/20). USDT is recommended.",
     listPassBtn: "List pass",
     invalidPrice: "Invalid price — enter a number, e.g. 2 or 1.5.",
     belowFloor: "Price below the {tier} floor: minimum {min}.",
@@ -640,7 +624,7 @@ export const I18N = {
       "The market contract's deploy block is not set in the configuration — the RPC fallback cannot run.",
     errUserRejected: "Transaction rejected in the wallet. Nothing was sent.",
     errInsufficientFunds:
-      "Not enough tBNB in the wallet for gas (or for a tBNB payment). Claim free tBNB from the testnet faucet.",
+      "Not enough tBNB in the wallet for gas. Claim free tBNB from the testnet faucet.",
     errNoListing: "Listing not found — it may already be sold or cancelled.",
     errNotSeller: "Only the seller can change or cancel this listing.",
     errBelowFloor: "Price below this pass tier's floor.",
@@ -652,7 +636,7 @@ export const I18N = {
       "The BNB sent does not exactly match the listing price.",
     errValueNotAllowed: "A USDT purchase must not send BNB.",
     errInvalidPrice: "Invalid price.",
-    errInvalidPaymentToken: "Invalid payment currency (USDT or BNB only).",
+    errInvalidPaymentToken: "Invalid payment currency (USDT only).",
     errNotTreasury: "Only the treasury can withdraw the accumulated fees.",
     errNothingToSweep: "There are no accumulated fees to withdraw.",
     errPriceAboveMax:
@@ -744,10 +728,10 @@ export const I18N = {
     howTitle: "使用方法",
     howListVerb: "上架",
     howListText:
-      "——先授权市场合约使用您的通行证，然后设定价格（测试 USDT 或 tBNB）。价格不得低于该等级的底价。通行证仍在您的钱包中。",
+      "——先授权市场合约使用您的通行证，然后设定价格（测试 USDT）。价格不得低于该等级的底价。通行证仍在您的钱包中。",
     howBuyVerb: "购买",
     howBuyText:
-      "——测试 USDT 挂单需先授权相应金额的测试 USDT；tBNB 挂单则随购买交易一并发送 tBNB。资金在单笔交易中自动分配：卖家 94%、版税 5% 归财库、手续费 1% 暂存于市场合约。购买受最高价保护：若挂单价格在交易处理前涨至高于显示价格，交易将自动取消。",
+      "——测试 USDT 挂单需先授权相应金额的测试 USDT。资金在单笔交易中自动分配：卖家 94%、版税 5% 归财库、手续费 1% 暂存于市场合约。购买受最高价保护：若挂单价格在交易处理前涨至高于显示价格，交易将自动取消。",
     howUpdateVerb: "改价 / 取消",
     howUpdateText: "——卖家可随时改价或取消挂单（仅需 tBNB Gas）。",
     howNoClaimVerb: "测试网没有领取 / 退款",
@@ -756,19 +740,15 @@ export const I18N = {
     floorTableTitle: "各等级价格底价（测试网——与主网相同）",
     thTier: "等级",
     thFloorUsdt: "测试 USDT 底价",
-    thFloorBnb: "tBNB 底价（实时）",
     thBreakeven: "保本价*",
     tier1Usdt: "1 测试 USDT",
-    tier1Bnb: "~0.001826 tBNB",
     tier1Be: "1.064 测试 USDT",
     tier2Usdt: "1.5 测试 USDT",
-    tier2Bnb: "~0.002739 tBNB",
     tier2Be: "1.596 测试 USDT",
     tier3Usdt: "2 测试 USDT",
-    tier3Bnb: "~0.003652 tBNB",
     tier3Be: "2.128 测试 USDT",
     breakevenNote:
-      "* 保本价：扣除 6%（版税 5% + 手续费 1%）后，卖家净收入恰好等于铸造价的售价。tBNB 底价实时跟随 Chainlink 价格。",
+      "* 保本价：扣除 6%（版税 5% + 手续费 1%）后，卖家净收入恰好等于铸造价的售价。",
     splitTableTitle: "分配示例——2 测试 USDT 的一笔销售",
     thPart: "部分",
     thAmount: "金额",
@@ -864,7 +844,6 @@ export const I18N = {
     quoteSeller: "卖家",
     payUsdtNote:
       "USDT 支付：如授权额度不足，您将先被要求授权相应金额的 USDT，然后再发起购买交易。两者都需要在钱包中确认。",
-    payBnbNote: "BNB 支付：相应金额的 BNB 随购买交易一并发送——无需单独授权。",
     maxPriceWarn:
       "您的购买受最高价保护：若挂单价格在交易处理前涨至高于上方价格，交易将自动取消，您不会多付。交易发送前会再次验证挂单。",
     confirmBuyBtn: "确认购买——{price}",
@@ -898,8 +877,6 @@ export const I18N = {
     pricePlaceholder: "例如：2",
     floorNoteList:
       "{tier} 底价：{floor} · 保本价（净收入 = 铸造价）：{breakeven} · 每笔销售扣除：版税 5% + 手续费 1%。",
-    bnbFeeWarning:
-      "注意：以 BNB 结算时，1% 的 BNB 手续费会滞留在市场合约中，无法归集到 FeeDistributor（仅 USDT 手续费按 50/30/20 分配）。建议使用 USDT。",
     listPassBtn: "上架通行证",
     invalidPrice: "价格无效——请输入数字，例如 2 或 1.5。",
     belowFloor: "价格低于 {tier} 底价：最低 {min}。",
@@ -926,7 +903,7 @@ export const I18N = {
     errDeployBlockMissing: "配置中未填写市场合约的部署区块——RPC 备用方案无法运行。",
     errUserRejected: "交易在钱包中被拒绝。没有任何交易发出。",
     errInsufficientFunds:
-      "钱包中的 tBNB 不足以支付 Gas（或 tBNB 付款）。请在测试网水龙头免费领取 tBNB。",
+      "钱包中的 tBNB 不足以支付 Gas。请在测试网水龙头免费领取 tBNB。",
     errNoListing: "未找到挂单——可能已售出或已取消。",
     errNotSeller: "只有卖家可以修改或取消该挂单。",
     errBelowFloor: "价格低于该通行证等级的底价。",
@@ -936,7 +913,7 @@ export const I18N = {
     errIncorrectValue: "发送的 BNB 金额与挂单价格不完全一致。",
     errValueNotAllowed: "USDT 购买不得发送 BNB。",
     errInvalidPrice: "价格无效。",
-    errInvalidPaymentToken: "支付货币无效（仅支持 USDT 或 BNB）。",
+    errInvalidPaymentToken: "支付货币无效（仅支持 USDT）。",
     errNotTreasury: "只有财库可以提取已累积的手续费。",
     errNothingToSweep: "没有可提取的已累积手续费。",
     errPriceAboveMax:

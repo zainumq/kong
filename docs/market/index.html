@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="google" content="notranslate" />
-  <meta name="description" data-i18n-attr="content:metaDescription" content="Marketplace $KONG — jual beli Kong Mint Pass di BNB Chain. Bayar USDT atau BNB, royalti 5% ke treasury, fee market 1%. Non-custodial: pass tetap di wallet penjual." />
+  <meta name="description" data-i18n-attr="content:metaDescription" content="Marketplace $KONG — jual beli Kong Mint Pass di BNB Chain. Bayar USDT, royalti 5% ke treasury, fee market 1%. Non-custodial: pass tetap di wallet penjual." />
   <meta property="og:title" data-i18n-attr="content:pageTitle" content="Marketplace $KONG — Kong Mint Pass" />
-  <meta property="og:description" data-i18n-attr="content:ogDescription" content="Jual beli Kong Mint Pass (1 pass = 1 share $KONG). Bayar USDT atau BNB. Floor = harga mint per tier." />
+  <meta property="og:description" data-i18n-attr="content:ogDescription" content="Jual beli Kong Mint Pass (1 pass = 1 share $KONG). Bayar USDT. Floor = harga mint per tier." />
   <meta property="og:image" content="https://zainumq.github.io/kong/kong-pass-tier1.jpg" />
   <title data-i18n="pageTitle">Marketplace $KONG — Kong Mint Pass</title>
   <link rel="stylesheet" href="../styles.css" />
@@ -19,7 +19,7 @@
         <img class="brand-img" src="https://zainumq.github.io/kong/kong-pass-tier1.jpg" alt="" width="40" height="40" />
         <div>
           <h1>$KONG <span class="brand-kong">Marketplace</span></h1>
-          <p class="brand-sub" data-i18n="brandSub">Jual beli Kong Mint Pass — USDT atau BNB</p>
+          <p class="brand-sub" data-i18n="brandSub">Jual beli Kong Mint Pass — USDT</p>
         </div>
       </div>
       <div class="header-actions">
@@ -57,7 +57,7 @@
         <h2 class="hero-title" data-i18n="heroTitle">Jual beli pass, tanpa perantara.</h2>
         <p data-i18n="heroP1">
           Setiap Mint Pass adalah satu share sale $KONG. Di sini pass bisa
-          diperdagangkan sebelum diklaim: bayar dengan USDT atau BNB, harga
+          diperdagangkan sebelum diklaim: bayar dengan USDT, harga
           tetap, dan dana terbagi otomatis — penjual 94%, royalti 5% ke
           treasury, fee marketplace 1%.
         </p>
@@ -122,7 +122,6 @@
           <select id="filter-currency" class="text-input filter-select">
             <option value="all" data-i18n="filterAll">Semua</option>
             <option value="USDT">USDT</option>
-            <option value="BNB">BNB</option>
           </select>
         </label>
         <label class="filter-label" for="filter-sort"><span data-i18n="filterSort">Urutkan harga</span>
@@ -136,7 +135,6 @@
       <p id="listings-count" class="muted-text"></p>
       <p id="listings-note" class="muted-text"></p>
       <div id="listing-grid" class="pass-grid"></div>
-      <p id="rates-note" class="muted-text rates-note"></p>
     </section>
 
     <div id="buy-confirm" class="confirm-box" hidden></div>
@@ -154,8 +152,8 @@
     <section id="how-section" data-i18n-attr="aria-label:howAria" aria-label="Cara kerja">
       <h2 data-i18n="howTitle">Cara kerja</h2>
       <ol class="steps">
-        <li><strong data-i18n="howListVerb">List</strong><span data-i18n="howListText"> — approve kontrak market atas pass Anda, lalu tentukan harga (USDT atau BNB). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.</span></li>
-        <li><strong data-i18n="howBuyVerb">Beli</strong><span data-i18n="howBuyText"> — untuk listing USDT, approve USDT sebesar harga dulu; untuk listing BNB, BNB dikirim bersama transaksi beli. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.</span></li>
+        <li><strong data-i18n="howListVerb">List</strong><span data-i18n="howListText"> — approve kontrak market atas pass Anda, lalu tentukan harga (USDT). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.</span></li>
+        <li><strong data-i18n="howBuyVerb">Beli</strong><span data-i18n="howBuyText"> — untuk listing USDT, approve USDT sebesar harga dulu. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.</span></li>
         <li><strong data-i18n="howUpdateVerb">Ubah / batal</strong><span data-i18n="howUpdateText"> — penjual bisa mengubah harga atau membatalkan listing kapan saja (biaya gas saja).</span></li>
         <li><strong data-i18n="howClaimVerb">Klaim / refund</strong><span data-i18n="howClaimText"> — pemilik bisa klaim (setelah graduation) atau refund (bila sale gagal) kapan saja, bahkan saat pass ter-listing. Listing pass yang sudah dibakar otomatis tidak bisa dibeli.</span></li>
       </ol>
@@ -163,15 +161,15 @@
       <h3 data-i18n="floorTableTitle">Floor harga per tier</h3>
       <table class="info-table">
         <thead>
-          <tr><th data-i18n="thTier">Tier</th><th data-i18n="thFloorUsdt">Floor USDT</th><th data-i18n="thFloorBnb">Floor BNB (perkiraan)</th><th data-i18n="thBreakeven">Harga impas*</th></tr>
+          <tr><th data-i18n="thTier">Tier</th><th data-i18n="thFloorUsdt">Floor USDT</th><th data-i18n="thBreakeven">Harga impas*</th></tr>
         </thead>
         <tbody>
-          <tr><td>Tier 1 — Gold</td><td data-i18n="tier1Usdt">1 USDT</td><td data-i18n="tier1Bnb">~0,0017 BNB</td><td data-i18n="tier1Be">1,064 USDT</td></tr>
-          <tr><td>Tier 2 — Silver</td><td data-i18n="tier2Usdt">1,5 USDT</td><td data-i18n="tier2Bnb">~0,00254 BNB</td><td data-i18n="tier2Be">1,596 USDT</td></tr>
-          <tr><td>Tier 3 — Bronze</td><td data-i18n="tier3Usdt">2 USDT</td><td data-i18n="tier3Bnb">~0,00339 BNB</td><td data-i18n="tier3Be">2,128 USDT</td></tr>
+          <tr><td>Tier 1 — Gold</td><td data-i18n="tier1Usdt">1 USDT</td><td data-i18n="tier1Be">1,064 USDT</td></tr>
+          <tr><td>Tier 2 — Silver</td><td data-i18n="tier2Usdt">1,5 USDT</td><td data-i18n="tier2Be">1,596 USDT</td></tr>
+          <tr><td>Tier 3 — Bronze</td><td data-i18n="tier3Usdt">2 USDT</td><td data-i18n="tier3Be">2,128 USDT</td></tr>
         </tbody>
       </table>
-      <p class="muted-text" data-i18n="breakevenNote">* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%). Floor BNB final ditetapkan saat deploy berdasarkan harga BNB saat itu.</p>
+      <p class="muted-text" data-i18n="breakevenNote">* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%).</p>
 
       <h3 data-i18n="splitTableTitle">Contoh pembagian — penjualan 2 USDT</h3>
       <table class="info-table">

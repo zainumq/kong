@@ -126,7 +126,6 @@
           <select id="filter-currency" class="text-input filter-select">
             <option value="all" data-i18n="filterAll">Semua</option>
             <option value="USDT">USDT</option>
-            <option value="BNB">BNB</option>
           </select>
         </label>
         <label class="filter-label" for="filter-sort"><span data-i18n="filterSort">Urutkan harga</span>
@@ -158,8 +157,8 @@
     <section id="how-section" data-i18n-attr="aria-label:howAria" aria-label="Cara kerja">
       <h2 data-i18n="howTitle">Cara kerja</h2>
       <ol class="steps">
-        <li><strong data-i18n="howListVerb">List</strong><span data-i18n="howListText"> — approve kontrak market atas pass Anda, lalu tentukan harga (test USDT atau tBNB). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.</span></li>
-        <li><strong data-i18n="howBuyVerb">Beli</strong><span data-i18n="howBuyText"> — untuk listing test USDT, approve test USDT sebesar harga dulu; untuk listing tBNB, tBNB dikirim bersama transaksi beli. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.</span></li>
+        <li><strong data-i18n="howListVerb">List</strong><span data-i18n="howListText"> — approve kontrak market atas pass Anda, lalu tentukan harga (test USDT). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.</span></li>
+        <li><strong data-i18n="howBuyVerb">Beli</strong><span data-i18n="howBuyText"> — untuk listing test USDT, approve test USDT sebesar harga dulu. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.</span></li>
         <li><strong data-i18n="howUpdateVerb">Ubah / batal</strong><span data-i18n="howUpdateText"> — penjual bisa mengubah harga atau membatalkan listing kapan saja (biaya gas tBNB saja).</span></li>
         <li><strong data-i18n="howNoClaimVerb">Tidak ada klaim / refund di testnet</strong><span data-i18n="howNoClaimText"> — test pass tidak bisa diklaim menjadi $KONG dan tidak ada refund. Di mainnet nanti, pemilik bisa klaim (setelah graduation) atau refund (bila sale gagal) kapan saja, bahkan saat pass ter-listing.</span></li>
       </ol>
@@ -167,12 +166,12 @@
       <h3 data-i18n="floorTableTitle">Floor harga per tier (testnet — sama dengan mainnet)</h3>
       <table class="info-table">
         <thead>
-          <tr><th data-i18n="thTier">Tier</th><th data-i18n="thFloorUsdt">Floor test USDT</th><th data-i18n="thFloorBnb">Floor tBNB (live)</th><th data-i18n="thBreakeven">Harga impas*</th></tr>
+          <tr><th data-i18n="thTier">Tier</th><th data-i18n="thFloorUsdt">Floor test USDT</th><th data-i18n="thBreakeven">Harga impas*</th></tr>
         </thead>
         <tbody>
-          <tr><td>Tier 1 — Gold</td><td data-i18n="tier1Usdt">1 test USDT</td><td data-i18n="tier1Bnb">~0,001826 tBNB</td><td data-i18n="tier1Be">1,064 test USDT</td></tr>
-          <tr><td>Tier 2 — Silver</td><td data-i18n="tier2Usdt">1,5 test USDT</td><td data-i18n="tier2Bnb">~0,002739 tBNB</td><td data-i18n="tier2Be">1,596 test USDT</td></tr>
-          <tr><td>Tier 3 — Bronze</td><td data-i18n="tier3Usdt">2 test USDT</td><td data-i18n="tier3Bnb">~0,003652 tBNB</td><td data-i18n="tier3Be">2,128 test USDT</td></tr>
+          <tr><td>Tier 1 — Gold</td><td data-i18n="tier1Usdt">1 test USDT</td><td data-i18n="tier1Be">1,064 test USDT</td></tr>
+          <tr><td>Tier 2 — Silver</td><td data-i18n="tier2Usdt">1,5 test USDT</td><td data-i18n="tier2Be">1,596 test USDT</td></tr>
+          <tr><td>Tier 3 — Bronze</td><td data-i18n="tier3Usdt">2 test USDT</td><td data-i18n="tier3Be">2,128 test USDT</td></tr>
         </tbody>
       </table>
       <p class="muted-text" data-i18n="breakevenNote">* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%).</p>

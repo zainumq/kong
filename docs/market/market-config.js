@@ -4,7 +4,10 @@
 // STATUS: KONTRAK MARKET BELUM DI-DEPLOY KE MAINNET.
 // =============================================================================
 // Deploy mainnet ditahan sampai setelah pass pertama ada (sale dibuka
-// 1 Desember 2026). Sampai saat itu MARKET_ADDRESS adalah zero address dan
+// 1 Desember 2026) dan memakai KongMarketOracle USDT-only (opsi 2,
+// 26 Nov 2026): BNB dihapus dari kontrak — tidak ada lagi floor BNB,
+// kurs BNB/USDT, atau pembayaran BNB. ABI di bawah sudah disesuaikan
+// (buy non-payable). Sampai saat itu MARKET_ADDRESS adalah zero address dan
 // MARKET_DEPLOY_BLOCK null — halaman menampilkan pesan "Marketplace belum
 // dibuka" dengan rapi, bukan error mentah.
 //
@@ -13,40 +16,39 @@
 //   2. MARKET_DEPLOY_BLOCK -> nomor blok saat kontrak di-deploy (mempercepat
 //      query event; bila kosong, query BscScan dimulai dari blok 0 dan
 //      fallback RPC eth_getLogs TIDAK bisa jalan sama sekali).
-//   3. Floor BNB di TIER_FLOORS (bila harga BNB saat deploy membuat angka
-//      perkiraan di bawah ini tidak lagi cocok dengan floor kontrak —
-//      floor BNB final ditetapkan di constructor kontrak saat deploy).
-//   4. (Opsional) BSCSCAN_API_KEY — tanpa key, API Etherscan V2 tetap
+//   3. (Opsional) BSCSCAN_API_KEY — tanpa key, API Etherscan V2 tetap
 //      dicoba, tapi bisa ditolak/rate-limit; halaman lalu jatuh ke
 //      fallback eth_getLogs RPC.
 //
 // =============================================================================
 // ABI / EVENT — TERVERIFIKASI TERHADAP KONTRAK FINAL (19 Nov 2026)
 // =============================================================================
-// ABI di bawah ini dicocokkan persis dengan src/KongMarket.sol final
-// (pasca-perbaikan audit M-1). Urutan argumen event PENTING: topic hash
+// ABI di bawah ini dicocokkan dengan src/KongMarketOracle.sol USDT-only
+// (26 Nov 2026, opsi 2 — dari KongMarket.sol final pasca-perbaikan
+// audit M-1, dikurangi jalur BNB). Urutan argumen event PENTING: topic hash
 // dihitung dari signature lengkap, jadi urutan yang salah membuat query
 // event tidak menemukan apa pun. Bila kontrak berubah lagi, yang perlu
 // diubah HANYALAH konstanta KONG_MARKET_ABI di file ini — market.js
 // tidak hardcode signature apa pun (topic hash event dihitung dari ABI
 // via ethers.Interface).
 //
-// Fungsi (dari src/KongMarket.sol):
+// Fungsi (dari src/KongMarketOracle.sol, USDT-only):
 //   list(uint256 tokenId, uint256 price, address paymentToken)
 //   updatePrice(uint256 tokenId, uint256 newPrice)
 //   cancel(uint256 tokenId)
-//   buy(uint256 tokenId, uint256 maxPrice) payable
+//   buy(uint256 tokenId, uint256 maxPrice)
 //     -- maxPrice adalah proteksi front-run harga (temuan audit M-1):
 //        pembelian revert PriceAboveMax() bila harga listing sudah naik
 //        di atas maxPrice saat transaksi diproses. Frontend selalu
 //        mengirim maxPrice = harga listing yang ditampilkan/dverifikasi
-//        live. Untuk listing BNB, msg.value tetap tepat == harga.
+//        live. buy() non-payable (USDT-only): tidak ada msg.value.
 //   sweepFees(address token)
 //   listingOf(uint256 tokenId) view returns (address seller, uint256 price,
 //                                           address paymentToken)
-//   paymentToken = alamat USDT untuk listing USDT, address(0) untuk BNB.
+//   paymentToken = alamat USDT (satu-satunya mata uang; BNB dihapus
+//   dari kontrak 26 Nov 2026, opsi 2).
 //
-// Bentuk event (dari src/KongMarket.sol — perhatikan URUTAN argumennya):
+// Bentuk event (dari src/KongMarketOracle.sol — perhatikan URUTAN argumennya):
 //   Listed(address indexed seller, uint256 indexed tokenId,
 //          uint256 price, address paymentToken)
 //   PriceUpdated(uint256 indexed tokenId, uint256 newPrice)
@@ -83,41 +85,24 @@ export const BSCSCAN_API_KEY = "";
 export const MARKET_FEE_BPS = 100;
 
 // Floor harga per tier (spek §4a) — harga listing tidak boleh di bawah ini.
-// Floor USDT = harga mint per tier (pasti). Floor BNB = PERKIRAAN memakai
-// harga BNB ~$589,89 (19 Nov 2026); angka final ditetapkan saat deploy
-// berdasarkan harga BNB saat itu dan immutable di kontrak. Nilai di sini
-// dalam desimal manusia (bukan raw); USDT dan BNB sama-sama 18 desimal
-// di BSC, jadi parseUnits(value, 18) berlaku untuk keduanya.
+// Floor USDT = harga mint per tier (pasti). Tidak ada floor BNB — market
+// USDT-only sejak 26 Nov 2026 (opsi 2). Nilai di sini dalam desimal
+// manusia (bukan raw); parseUnits(value, 18) berlaku untuk USDT 18 desimal.
 export const TIER_FLOORS = {
-  1: { usdt: "1", bnb: "0.0017" },
-  2: { usdt: "1.5", bnb: "0.00254" },
-  3: { usdt: "2", bnb: "0.00339" },
+  1: { usdt: "1" },
+  2: { usdt: "1.5" },
+  3: { usdt: "2" },
 };
 
-// ---------------------------------------------------------------------------
-// Kurs BNB/USDT — dipakai untuk mengurutkan listing campuran USDT/BNB
-// berdasarkan nilai yang sama (tidak ada tampilan IDR di halaman market).
-// ---------------------------------------------------------------------------
-// BNB/USDT live dari ticker spot Binance US (publik, tanpa API key,
-// CORS terbuka): api.binance.us/api/v3/ticker/price?symbol=BNBUSDT.
-// (CoinGecko TIDAK mendukung USDT sebagai vs_currency — simple/price
-// diam-diam menghilangkan vs_currencies=usdt dan /coins/markets
-// mengembalikan "invalid vs_currency"; api.binance.com diblokir
-// geo dari sebagian lokasi, OKX tanpa header CORS — keduanya
-// terverifikasi 20 Nov 2026.)
-// Bila API tidak terjangkau, memakai kurs ACUAN TETAP di bawah ini
-// (19 Nov 2026) dan halaman menampilkan catatan kurs acuan.
-export const BINANCE_US_BNB_USDT_URL =
-  "https://api.binance.us/api/v3/ticker/price?symbol=BNBUSDT";
-export const BNB_USDT_FALLBACK = 589.89;
-
-// ABI kontrak KongMarket — lihat catatan asumsi di atas.
+// ABI kontrak KongMarketOracle USDT-only (26 Nov 2026, opsi 2) —
+// disesuaikan dari ABI KongMarket v1: buy() non-payable, tanpa error
+// IncorrectValue / ValueNotAllowed. Lihat catatan asumsi di atas.
 export const KONG_MARKET_ABI = [
   // Writes
   "function list(uint256 tokenId, uint256 price, address paymentToken)",
   "function updatePrice(uint256 tokenId, uint256 newPrice)",
   "function cancel(uint256 tokenId)",
-  "function buy(uint256 tokenId, uint256 maxPrice) payable",
+  "function buy(uint256 tokenId, uint256 maxPrice)",
   "function sweepFees(address token)",
   // View
   "function listingOf(uint256 tokenId) view returns (address seller, uint256 price, address paymentToken)",
@@ -139,8 +124,6 @@ export const KONG_MARKET_ABI = [
   "error SelfPurchase()",
   "error OwnershipChanged()",
   "error NotApproved()",
-  "error IncorrectValue()",
-  "error ValueNotAllowed()",
   "error PriceAboveMax()",
   "error InvalidRoyalty()",
   "error NotTreasury()",

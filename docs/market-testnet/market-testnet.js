@@ -36,7 +36,6 @@ import {
   DISPENSER_ABI,
   MOCK_USDT_ABI,
   FAUCET_URL,
-  SORT_BNB_USD,
   TESTNET_PASS_SCAN_CAP,
 } from "./market-testnet-config.js";
 import { t, setLang, initLang, applyStaticI18n, numLocale } from "./i18n.js";
@@ -56,10 +55,10 @@ const MARKET_DEPLOYED =
 
 const isUsdt = (paymentToken) =>
   paymentToken && paymentToken.toLowerCase() === USDT_ADDRESS.toLowerCase();
-const isBnb = (paymentToken) =>
-  paymentToken && paymentToken.toLowerCase() === ZERO_ADDRESS;
-const isKnownCurrency = (paymentToken) =>
-  isUsdt(paymentToken) || isBnb(paymentToken);
+// Market USDT-only sejak 26 Nov 2026 (opsi 2): satu-satunya mata uang
+// pembayaran yang dikenal adalah USDT. Listing BNB lama (bila ada di
+// state kontrak lama) dianggap tidak dikenal.
+const isKnownCurrency = (paymentToken) => isUsdt(paymentToken);
 
 // ---------------------------------------------------------------------------
 // Format angka mengikuti bahasa aktif (id-ID: koma desimal;
@@ -74,12 +73,9 @@ const fmtUsdt = (value, decimals = 18) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} USDT`;
-const fmtBnb = (value) =>
-  `${Number(ethers.formatUnits(value, 18)).toLocaleString(numLocale(), {
-    maximumFractionDigits: 6,
-  })} BNB`;
-const fmtPrice = (price, paymentToken) =>
-  isUsdt(paymentToken) ? fmtUsdt(price) : fmtBnb(price);
+// fmtPrice: semua harga kini USDT (parameter paymentToken dipertahankan
+// supaya semua pemanggil lama tetap jalan tanpa diubah).
+const fmtPrice = (price) => fmtUsdt(price);
 // TIDAK ADA fmtIdr di halaman testnet — token test tanpa nilai rupiah.
 
 // ---------------------------------------------------------------------------
@@ -95,14 +91,11 @@ let busy = false; // sebuah transaksi sedang berjalan
 // Dibaca live di refreshTestnetPanel; 18 adalah fallback yang benar.
 let usdtDecimals = 18;
 
-// Nilai tukar ke USD — HANYA untuk mengurutkan listing campuran USDT/BNB
-// berdasarkan nilai yang sama. Di testnet tidak ada harga riil: test USDT
-// dihitung 1 dan tBNB memakai angka acuan tetap SORT_BNB_USD dari config.
-// Angka ini tidak pernah ditampilkan sebagai nilai uang.
-const priceToUsd = (price, paymentToken) => {
-  const amount = Number(ethers.formatUnits(price, 18));
-  return isUsdt(paymentToken) ? amount : amount * SORT_BNB_USD;
-};
+// Nilai tukar ke USD — HANYA untuk mengurutkan listing berdasarkan nilai
+// yang sama. Semua listing kini USDT (harga = nilai USD-nya), jadi tidak
+// ada lagi konversi kurs. Angka ini tidak pernah ditampilkan sebagai
+// nilai uang.
+const priceToUsd = (price) => Number(ethers.formatUnits(price, 18));
 
 // Status wallet yang terhubung.
 const wallet = {
@@ -134,7 +127,7 @@ let pendingBuy = null;
 // Draf input harga/mata uang di kartu "Pass saya", dipertahankan saat
 // kartu di-render ulang (mis. setelah transaksi selesai).
 const priceDrafts = new Map(); // key "list-<id>" / "update-<id>" -> string
-const currencyDrafts = new Map(); // key "list-<id>" -> "USDT" | "BNB"
+const currencyDrafts = new Map(); // key "list-<id>" -> "USDT"
 
 // Provider baca-only, dicoba berurutan sampai ada yang menjawab.
 const readProviders = RPC_URLS.map(
@@ -292,60 +285,12 @@ function tierOfShare(shareNumber) {
   return 3;
 }
 
-// ---------------------------------------------------------------------------
-// Floor BNB live dari oracle (KongMarketOracle)
-// ---------------------------------------------------------------------------
-// floorOf() BNB dibaca on-chain saat halaman dimuat; nilai statis
-// TIER_FLOORS hanya fallback bila RPC gagal. Sel tabel tier + catatan
-// floor di form listing memakai nilai live ini.
-const liveBnbFloors = { 1: null, 2: null, 3: null };
-
-function fmtLiveBnbFloor(value) {
-  return `~${Number(ethers.formatUnits(value, 18)).toLocaleString(numLocale(), {
-    maximumFractionDigits: 6,
-  })} tBNB`;
-}
-
-function applyLiveBnbFloors() {
-  for (const tier of [1, 2, 3]) {
-    const live = liveBnbFloors[tier];
-    if (live === null) continue;
-    const cell = document.querySelector(`[data-i18n="tier${tier}Bnb"]`);
-    if (cell) cell.textContent = fmtLiveBnbFloor(live);
-  }
-}
-
-async function refreshBnbFloors() {
-  try {
-    const floors = await withReadProvider(async (provider) => {
-      const market = marketContract(provider);
-      return Promise.all([
-        market.floorOf(1, ZERO_ADDRESS),
-        market.floorOf(2, ZERO_ADDRESS),
-        market.floorOf(3, ZERO_ADDRESS),
-      ]);
-    });
-    liveBnbFloors[1] = floors[0];
-    liveBnbFloors[2] = floors[1];
-    liveBnbFloors[3] = floors[2];
-    applyLiveBnbFloors();
-    renderMyPasses();
-  } catch (err) {
-    // Fallback statis TIER_FLOORS tetap dipakai; gagal baca oracle
-    // tidak boleh memecahkan halaman.
-    console.warn("[market-testnet] gagal baca floor BNB live:", err);
-  }
-}
-
-/** Floor tier dalam raw unit (18 desimal) untuk mata uang tertentu.
- *  BNB memakai nilai live dari oracle bila sudah terbaca; USDT selalu
- *  statis (immutable di kontrak). */
+/** Floor tier dalam raw unit (18 desimal). Market USDT-only: floor selalu
+ *  dari TIER_FLOORS (sama dengan floorOf(tier, USDT) kontrak).
+ *  Parameter currency dipertahankan supaya pemanggil lama tetap jalan. */
 function floorRaw(tier, currency) {
-  if (currency === "BNB" && liveBnbFloors[tier] !== null) {
-    return liveBnbFloors[tier];
-  }
   const floor = TIER_FLOORS[tier];
-  return ethers.parseUnits(currency === "BNB" ? floor.bnb : floor.usdt, 18);
+  return ethers.parseUnits(floor.usdt, 18);
 }
 
 /** Harga impas: harga jual agar penjual terima bersih sebesar harga mint
@@ -880,7 +825,6 @@ function filteredListings() {
   let list = [...verified];
   if (filters.tier !== 0) list = list.filter((l) => l.tier === filters.tier);
   if (filters.currency === "USDT") list = list.filter((l) => isUsdt(l.paymentToken));
-  if (filters.currency === "BNB") list = list.filter((l) => isBnb(l.paymentToken));
   list.sort((a, b) => {
     const diff = priceToUsd(a.price, a.paymentToken) - priceToUsd(b.price, b.paymentToken);
     return filters.sort === "asc" ? diff : -diff;
@@ -1152,9 +1096,7 @@ function renderBuyConfirm() {
 
   const note = document.createElement("p");
   note.className = "muted-text";
-  note.textContent = isUsdt(pendingBuy.paymentToken)
-    ? t("payUsdtNote")
-    : t("payBnbNote");
+  note.textContent = t("payUsdtNote");
   box.appendChild(note);
 
   const warn = document.createElement("p");
@@ -1207,43 +1149,34 @@ async function confirmBuy() {
 
     const write = marketContract(signer);
     let tx;
-    if (isUsdt(listing.paymentToken)) {
-      // USDT: approve dulu bila allowance ke market belum cukup.
-      const allowance = await withReadProvider((p) =>
-        usdtContract(p).allowance(account, MARKET_ADDRESS)
-      );
-      if (allowance < listing.price) {
-        const usdt = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
-        const approveTx = await usdt.approve(MARKET_ADDRESS, listing.price);
-        setTxStatus([
-          [
-            {
-              text: t("approveUsdtPending", {
-                amount: fmtUsdt(listing.price, usdtDecimals),
-              }),
-            },
-          ],
-          [
-            { text: t("txLabel") },
-            { text: shortAddress(approveTx.hash), href: bscscanTx(approveTx.hash) },
-          ],
-        ]);
-        await approveTx.wait(1);
-      }
-      // Simulasi dulu: menangkap revert (listing basi, dll.) sebelum gas keluar.
-      // maxPrice = harga listing terverifikasi (proteksi audit M-1: bila
-      // harga listing naik di atas ini sebelum transaksi diproses, buy revert).
-      await write.buy.staticCall(listing.tokenId, listing.price);
-      tx = await write.buy(listing.tokenId, listing.price);
-    } else {
-      // BNB: kirim tepat sebesar harga bersama transaksi.
-      await write.buy.staticCall(listing.tokenId, listing.price, {
-        value: listing.price,
-      });
-      tx = await write.buy(listing.tokenId, listing.price, {
-        value: listing.price,
-      });
+    // USDT-only (market USDT-only sejak 26 Nov 2026): approve dulu bila
+    // allowance ke market belum cukup.
+    const allowance = await withReadProvider((p) =>
+      usdtContract(p).allowance(account, MARKET_ADDRESS)
+    );
+    if (allowance < listing.price) {
+      const usdt = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
+      const approveTx = await usdt.approve(MARKET_ADDRESS, listing.price);
+      setTxStatus([
+        [
+          {
+            text: t("approveUsdtPending", {
+              amount: fmtUsdt(listing.price, usdtDecimals),
+            }),
+          },
+        ],
+        [
+          { text: t("txLabel") },
+          { text: shortAddress(approveTx.hash), href: bscscanTx(approveTx.hash) },
+        ],
+      ]);
+      await approveTx.wait(1);
     }
+    // Simulasi dulu: menangkap revert (listing basi, dll.) sebelum gas keluar.
+    // maxPrice = harga listing terverifikasi (proteksi audit M-1: bila
+    // harga listing naik di atas ini sebelum transaksi diproses, buy revert).
+    await write.buy.staticCall(listing.tokenId, listing.price);
+    tx = await write.buy(listing.tokenId, listing.price);
     setTxStatus([
       [{ text: t("buyingPending", { id: listing.tokenId }) }],
       [
@@ -1406,7 +1339,7 @@ async function findOwnedPasses() {
           ) {
             listed = true;
             listingPrice = onChain.price;
-            listingCurrency = isUsdt(onChain.paymentToken) ? "USDT" : "BNB";
+            listingCurrency = "USDT";
           }
         } catch {
           // Listing/approval tidak terbaca — kartu tetap tampil dengan
@@ -1549,10 +1482,7 @@ function buildListedControls(pass) {
   const status = document.createElement("p");
   status.className = "listing-status";
   status.textContent = t("listedPrice", {
-    price: fmtPrice(
-      pass.listingPrice,
-      pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-    ),
+    price: fmtPrice(pass.listingPrice, USDT_ADDRESS),
   });
   wrap.appendChild(status);
 
@@ -1594,12 +1524,8 @@ function buildListedControls(pass) {
   const floor = floorRaw(pass.tier, pass.listingCurrency);
   floorNote.textContent = t("floorNote", {
     tier: meta_name(pass.tier),
-    floor:
-      pass.listingCurrency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
-    breakeven:
-      pass.listingCurrency === "USDT"
-        ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
-        : fmtBnb(breakevenRaw(pass.tier, "BNB")),
+    floor: fmtUsdt(floor),
+    breakeven: fmtUsdt(breakevenRaw(pass.tier, "USDT")),
   });
   wrap.appendChild(floorNote);
 
@@ -1655,7 +1581,7 @@ function buildListForm(pass) {
   input.addEventListener("input", () => priceDrafts.set(draftKey, input.value));
   const select = document.createElement("select");
   select.className = "text-input list-currency";
-  for (const cur of ["USDT", "BNB"]) {
+  for (const cur of ["USDT"]) {
     const opt = document.createElement("option");
     opt.value = cur;
     opt.textContent = cur;
@@ -1668,27 +1594,14 @@ function buildListForm(pass) {
 
   const floorNote = document.createElement("p");
   floorNote.className = "floor-note";
-  // Peringatan fee BNB: default mata uang listing adalah USDT (select di
-  // bawah diinisialisasi ke "USDT"); bila pengguna memilih BNB, tampilkan
-  // peringatan bahwa fee 1% BNB tertahan di kontrak market (FeeDistributor
-  // hanya menyapu fee USDT) — temuan uji acak 26 Nov 2026.
-  const bnbWarn = document.createElement("p");
-  bnbWarn.className = "referrer-note note-bad";
-  bnbWarn.textContent = t("bnbFeeWarning");
-  bnbWarn.hidden = true;
   const updateFloorNote = () => {
     const cur = select.value;
     const floor = floorRaw(pass.tier, cur);
-    const token = cur === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS;
     floorNote.textContent = t("floorNoteList", {
       tier: meta_name(pass.tier),
-      floor: cur === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
-      breakeven:
-        cur === "USDT"
-          ? fmtUsdt(breakevenRaw(pass.tier, "USDT"))
-          : fmtBnb(breakevenRaw(pass.tier, "BNB")),
+      floor: fmtUsdt(floor),
+      breakeven: fmtUsdt(breakevenRaw(pass.tier, "USDT")),
     });
-    bnbWarn.hidden = cur !== "BNB";
   };
   select.addEventListener("change", () => {
     currencyDrafts.set(draftKey, select.value);
@@ -1696,7 +1609,6 @@ function buildListForm(pass) {
   });
   updateFloorNote();
   wrap.appendChild(floorNote);
-  wrap.appendChild(bnbWarn);
 
   const errNote = document.createElement("p");
   errNote.className = "referrer-note note-bad";
@@ -1802,12 +1714,12 @@ async function listPassFlow(pass, rawPrice, currency, errNote) {
       errNote,
       t("belowFloor", {
         tier: meta_name(pass.tier),
-        min: currency === "USDT" ? fmtUsdt(floor) : fmtBnb(floor),
+        min: fmtUsdt(floor),
       })
     );
     return;
   }
-  const paymentToken = currency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS;
+  const paymentToken = USDT_ADDRESS;
   setBusy(true);
   clearTxStatus();
   try {
@@ -1899,10 +1811,7 @@ async function updatePriceFlow(pass, rawPrice, errNote) {
       errNote,
       t("belowFloor", {
         tier: meta_name(pass.tier),
-        min:
-          pass.listingCurrency === "USDT"
-            ? fmtUsdt(floor)
-            : fmtBnb(floor),
+        min: fmtUsdt(floor),
       })
     );
     return;
@@ -1919,10 +1828,7 @@ async function updatePriceFlow(pass, rawPrice, errNote) {
         {
           text: t("updatePricePending", {
             id: pass.tokenId,
-            price: fmtPrice(
-              price,
-              pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-            ),
+            price: fmtPrice(price, USDT_ADDRESS),
           }),
         },
       ],
@@ -1938,10 +1844,7 @@ async function updatePriceFlow(pass, rawPrice, errNote) {
         {
           text: t("updatePriceDone", {
             id: pass.tokenId,
-            price: fmtPrice(
-              price,
-              pass.listingCurrency === "USDT" ? USDT_ADDRESS : ZERO_ADDRESS
-            ),
+            price: fmtPrice(price, USDT_ADDRESS),
           }),
         },
       ],
@@ -2183,7 +2086,6 @@ async function init() {
     renderListings();
     renderMyPasses();
     renderBuyConfirm();
-    applyLiveBnbFloors();
   });
 
   wireWalletEvents();
@@ -2191,7 +2093,7 @@ async function init() {
   // Muat panel testnet + listing secara paralel (keduanya jalan tanpa
   // wallet dan independen), lalu polling panel testnet tiap menit.
   // Sebelumnya berurutan — listing menunggu panel (~25 detik) dulu.
-  await Promise.all([refreshTestnetPanel(), loadListings(), refreshBnbFloors()]);
+  await Promise.all([refreshTestnetPanel(), loadListings()]);
   setInterval(refreshTestnetPanel, 60_000);
 
   // Reconnect diam-diam bila wallet sudah pernah diotorisasi (tanpa prompt).

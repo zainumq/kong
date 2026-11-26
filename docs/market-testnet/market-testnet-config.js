@@ -6,16 +6,29 @@
 // supaya satu file ini cukup untuk mengubah seluruh wiring testnet.
 //
 // =============================================================================
-// STATUS: MARKET TESTNET v2 — FEE DISTRIBUTOR TER-WIRE (26 Nov 2026)
+// STATUS: MARKET TESTNET v3 — USDT-ONLY, STACK BARU (opsi 2, 26 Nov 2026)
 // =============================================================================
-//   KongMarketOracle (testnet) 0xad8bd4be04983b99020a17e9be31f4e700ff9650
-//                         (floor BNB dinamis via Chainlink BNB/USD; deploy 26 Nov 2026,
-//                          blok 144829604, tx 0x6a9073e3…; treasury = FeeDistributor
-//                          0x418FF609b23Fe3086db9A851E4D3f4521cE193F8, ter-wire
-//                          setMarket + setMarketPass 26 Nov ~08:02 WIB)
-//   KongMarketPass (testnet) 0x78654735c0035f3b8d37c96e5232e9646e5fc8ed
-//                         (deploy 26 Nov 2026, blok 144828628; distributor =
-//                          FeeDistributor di atas; DUPLIKAT 0xdd83ba1e… JANGAN dipakai)
+//   KongMarketOracle BARU (USDT-only, tanpa Chainlink/BNB)
+//                         0x0e5a78adf05a3218fec503256f11e785acd71d32
+//                         (deploy 26 Nov 2026, blok 144922316,
+//                          tx 0xdc4203898ef96956bdbda8c3a925248e5aaea6524f23e56e5503a1d48f9999e4;
+//                          treasury = FeeDistributor BARU
+//                          0x33aA862117F43cf50071cA7E3fd28C2f6044201C, ter-wire
+//                          setMarket + setMarketPass 26 Nov 2026)
+//   KongMarketPass BARU 0xD03E0a27de534130dAF1ea0eccb8a20770489BDc
+//                         (deploy 26 Nov 2026, blok 144914561; distributor =
+//                          FeeDistributor BARU di atas)
+//   FeeDistributor BARU 0x33aA862117F43cf50071cA7E3fd28C2f6044201C
+//                         (deploy 26 Nov 2026, blok 144911160,
+//                          tx 0x6ee9e3911c1544aa2f5489419e59a2159f2df390936294dce057a9948c60dfe2)
+//   Market LAMA 0xad8bd4be04983b99020a17e9be31f4e700ff9650 PENSIUN —
+//                         oracle Chainlink + dukung BNB; fee 1% penjualan BNB
+//                         tertahan di kontrak dan tidak bisa disapu
+//                         (temuan uji acak 26 Nov 2026) — diganti market
+//                         USDT-only di atas. JANGAN dipakai lagi.
+//   FeeDistributor LAMA 0x418FF609b23Fe3086db9A851E4D3f4521cE193F8 PENSIUN;
+//   KongMarketPass LAMA 0x78654735c0035f3b8d37c96e5232e9646e5fc8ed PENSIUN
+//                         (DUPLIKAT 0xdd83ba1e… JANGAN dipakai).
 //   Oracle LAMA 0x0c537BC6b9b9FD26e6B76683D05FD43C32f33ec2 (deploy 22 Nov 2026)
 //                         PENSIUN — treasury-nya deployer testnet (bukan
 //                         FeeDistributor), tidak bisa di-wire; halaman ini
@@ -38,14 +51,15 @@
 //   tanpa uang sungguhan.
 
 // --- Kontrak testnet (BSC Testnet, chain 97) ---
-export const MARKET_ADDRESS = "0xad8bd4be04983b99020a17e9be31f4e700ff9650";
+export const MARKET_ADDRESS = "0x0e5a78adf05a3218fec503256f11e785acd71d32";
 export const KONG_PASS_ADDRESS = "0xfB10858719919f0eA3149F2c25CBe52086dF9984";
 export const USDT_ADDRESS = "0x41de1C38502d5Ae2672470620Ac183Db566dde8A";
 export const DISPENSER_ADDRESS = "0xE40421FD8f1b1Bce85c02F3b3FEaF915dffE029A";
 
-// Blok deploy KongMarketOracle testnet BARU (tx 0x6a9073e3…, 26 Nov 2026) —
-// untuk query event; tanpa ini fallback eth_getLogs RPC tidak bisa jalan.
-export const MARKET_DEPLOY_BLOCK = 144829604;
+// Blok deploy KongMarketOracle testnet BARU (USDT-only,
+// tx 0xdc420389…, 26 Nov 2026) — untuk query event; tanpa ini fallback
+// eth_getLogs RPC tidak bisa jalan.
+export const MARKET_DEPLOY_BLOCK = 144922316;
 
 // Faucet tBNB resmi (butuh saldo mainnet ≥0,002 BNB di alamat yang sama +
 // hCaptcha — lihat halaman). Alternatif: faucet QuickNode (syarat sama).
@@ -90,21 +104,15 @@ export const BSCSCAN_API_KEY = "";
 // estimasi pembagian di UI; pembagian sebenarnya ditegakkan kontrak.
 export const MARKET_FEE_BPS = 100;
 
-// Floor harga per tier. USDT tetap (sama dengan mainnet, immutable di
-// kontrak). BNB DINAMIS: dibaca live dari floorOf() kontrak oracle
-// (Chainlink BNB/USD) — nilai bnb di bawah ini hanya FALLBACK bila
-// pembacaan live gagal (nilai per 22 Nov 2026, BNB ~$547,59).
-// Nilai dalam desimal manusia; parseUnits(value, 18).
+// Floor harga per tier — USDT SAJA (sama dengan mainnet, immutable di
+// kontrak). Market USDT-only sejak 26 Nov 2026 (opsi 2): BNB dihapus
+// dari kontrak, jadi tidak ada lagi floor BNB (dulu dinamis via oracle
+// Chainlink BNB/USD). Nilai dalam desimal manusia; parseUnits(value, 18).
 export const TIER_FLOORS = {
-  1: { usdt: "1", bnb: "0.001826" },
-  2: { usdt: "1.5", bnb: "0.002739" },
-  3: { usdt: "2", bnb: "0.003652" },
+  1: { usdt: "1" },
+  2: { usdt: "1.5" },
+  3: { usdt: "2" },
 };
-
-// Angka acuan tBNB dalam USD — HANYA dipakai sebagai proksi pengurutan
-// listing campuran USDT/BNB (priceToUsd). BUKAN harga riil dan tidak
-// pernah ditampilkan sebagai nilai uang di halaman testnet.
-export const SORT_BNB_USD = 547.59; // perkiraan 22 Nov 2026
 
 // Scan ownerOf untuk "Pass saya": tokenId 1..cap. Stok dispenser #2
 // 1.000 pass (#33-1032); cap 1200 memberi ruang untuk dispenser
@@ -153,14 +161,15 @@ export const TIERS = [
   },
 ];
 
-// ABI KongMarketOracle (terverifikasi terhadap
-// src/KongMarketOracle.sol; floorOf + StalePrice adalah tambahan oracle
-// yang tidak ada di KongMarket v1).
+// ABI KongMarketOracle USDT-only (terverifikasi terhadap
+// src/KongMarketOracle.sol pasca-opsi-2, 26 Nov 2026: tanpa Chainlink,
+// tanpa BNB — buy() non-payable, tanpa error StalePrice /
+// IncorrectValue / ValueNotAllowed).
 export const KONG_MARKET_ABI = [
   "function list(uint256 tokenId, uint256 price, address paymentToken)",
   "function updatePrice(uint256 tokenId, uint256 newPrice)",
   "function cancel(uint256 tokenId)",
-  "function buy(uint256 tokenId, uint256 maxPrice) payable",
+  "function buy(uint256 tokenId, uint256 maxPrice)",
   "function sweepFees(address token)",
   "function listingOf(uint256 tokenId) view returns (address seller, uint256 price, address paymentToken)",
   "function floorOf(uint8 tier, address paymentToken) view returns (uint256)",
@@ -174,15 +183,12 @@ export const KONG_MARKET_ABI = [
   "error InvalidPrice()",
   "error InvalidFloor()",
   "error BelowFloor()",
-  "error StalePrice()",
   "error NotPassOwner()",
   "error NotSeller()",
   "error NoListing()",
   "error SelfPurchase()",
   "error OwnershipChanged()",
   "error NotApproved()",
-  "error IncorrectValue()",
-  "error ValueNotAllowed()",
   "error PriceAboveMax()",
   "error InvalidRoyalty()",
   "error NotTreasury()",

@@ -36,10 +36,10 @@ export const I18N = {
     // -- meta / header --
     pageTitle: "Marketplace $KONG — Kong Mint Pass",
     metaDescription:
-      "Marketplace $KONG — jual beli Kong Mint Pass di BNB Chain. Bayar USDT atau BNB, royalti 5% ke treasury, fee market 1%. Non-custodial: pass tetap di wallet penjual.",
+      "Marketplace $KONG — jual beli Kong Mint Pass di BNB Chain. Bayar USDT, royalti 5% ke treasury, fee market 1%. Non-custodial: pass tetap di wallet penjual.",
     ogDescription:
-      "Jual beli Kong Mint Pass (1 pass = 1 share $KONG). Bayar USDT atau BNB. Floor = harga mint per tier.",
-    brandSub: "Jual beli Kong Mint Pass — USDT atau BNB",
+      "Jual beli Kong Mint Pass (1 pass = 1 share $KONG). Bayar USDT. Floor = harga mint per tier.",
+    brandSub: "Jual beli Kong Mint Pass — USDT",
     mintPageBtn: "← Halaman Mint",
     testnetDemoBtn: "Coba demo testnet",
     langSelectLabel: "Pilih bahasa",
@@ -56,7 +56,7 @@ export const I18N = {
     heroImgAlt: "Kong Mint Pass — artwork Tier 1 Gold: King Kong berpakaian agen rahasia",
     heroTitle: "Jual beli pass, tanpa perantara.",
     heroP1:
-      "Setiap Mint Pass adalah satu share sale $KONG. Di sini pass bisa diperdagangkan sebelum diklaim: bayar dengan USDT atau BNB, harga tetap, dan dana terbagi otomatis — penjual 94%, royalti 5% ke treasury, fee marketplace 1%.",
+      "Setiap Mint Pass adalah satu share sale $KONG. Di sini pass bisa diperdagangkan sebelum diklaim: bayar dengan USDT, harga tetap, dan dana terbagi otomatis — penjual 94%, royalti 5% ke treasury, fee marketplace 1%.",
     heroP2:
       "Non-custodial: pass tetap di wallet penjual selama ter-listing. Penjual tetap bisa klaim atau refund kapan saja — listing yang pass-nya sudah diklaim otomatis tidak bisa dibeli.",
     heroP3:
@@ -117,10 +117,10 @@ export const I18N = {
     howTitle: "Cara kerja",
     howListVerb: "List",
     howListText:
-      " — approve kontrak market atas pass Anda, lalu tentukan harga (USDT atau BNB). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.",
+      " — approve kontrak market atas pass Anda, lalu tentukan harga (USDT). Harga tidak boleh di bawah floor tier-nya. Pass tetap di wallet Anda.",
     howBuyVerb: "Beli",
     howBuyText:
-      " — untuk listing USDT, approve USDT sebesar harga dulu; untuk listing BNB, BNB dikirim bersama transaksi beli. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.",
+      " — untuk listing USDT, approve USDT sebesar harga dulu. Dana terbagi otomatis dalam satu transaksi: penjual 94%, royalti 5% ke treasury, fee 1% ditampung di kontrak market. Pembelian dilindungi batas harga maksimum: bila harga listing naik di atas harga yang ditampilkan sebelum transaksi diproses, transaksi dibatalkan otomatis.",
     howUpdateVerb: "Ubah / batal",
     howUpdateText:
       " — penjual bisa mengubah harga atau membatalkan listing kapan saja (biaya gas saja).",
@@ -130,19 +130,15 @@ export const I18N = {
     floorTableTitle: "Floor harga per tier",
     thTier: "Tier",
     thFloorUsdt: "Floor USDT",
-    thFloorBnb: "Floor BNB (perkiraan)",
     thBreakeven: "Harga impas*",
     tier1Usdt: "1 USDT",
-    tier1Bnb: "~0,0017 BNB",
     tier1Be: "1,064 USDT",
     tier2Usdt: "1,5 USDT",
-    tier2Bnb: "~0,00254 BNB",
     tier2Be: "1,596 USDT",
     tier3Usdt: "2 USDT",
-    tier3Bnb: "~0,00339 BNB",
     tier3Be: "2,128 USDT",
     breakevenNote:
-      "* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%). Floor BNB final ditetapkan saat deploy berdasarkan harga BNB saat itu.",
+      "* Harga impas: harga jual agar penjual terima bersih sebesar harga mint setelah potongan 6% (royalti 5% + fee 1%).",
     splitTableTitle: "Contoh pembagian — penjualan 2 USDT",
     thPart: "Bagian",
     thAmount: "Besaran",
@@ -191,10 +187,6 @@ export const I18N = {
     salePhaseRefund: "Jendela refund dibuka",
     salePhaseEnded: "Berakhir",
     // -- kurs (JS) --
-    ratesNoteLive:
-      "Kurs live (Binance US): 1 BNB ≈ {bnbUsdt} USDT.",
-    ratesNoteFallback:
-      "Kurs acuan 19 Nov 2026 (API harga tidak tersedia): 1 BNB ≈ {bnbUsdt} USDT.",
     // -- listing (JS) --
     marketNotDeployedNote:
       "Listing akan muncul di sini setelah kontrak market di-deploy dan ada pass yang di-listing.",
@@ -239,8 +231,6 @@ export const I18N = {
     quoteSeller: "Penjual",
     payUsdtNote:
       "Pembayaran USDT: bila allowance belum cukup, Anda akan diminta menyetujui (approve) USDT sebesar harga dulu — lalu transaksi beli menyusul. Keduanya perlu konfirmasi di wallet.",
-    payBnbNote:
-      "Pembayaran BNB: BNB sebesar harga dikirim bersama transaksi beli — tanpa approve terpisah.",
     maxPriceWarn:
       "Pembelian dilindungi batas harga maksimum: bila harga listing berubah naik di atas harga di atas sebelum transaksi diproses, transaksi dibatalkan otomatis dan Anda tidak membayar lebih. Listing diverifikasi ulang tepat sebelum transaksi dikirim.",
     confirmBuyBtn: "Konfirmasi beli — {price}",
@@ -281,8 +271,6 @@ export const I18N = {
     pricePlaceholder: "cth: 2",
     floorNoteList:
       "Floor {tier}: {floor} · Harga impas (terima bersih = harga mint): {breakeven} · Potongan per penjualan: royalti 5% + fee 1%.",
-    bnbFeeWarning:
-      "Perhatian: penjualan dalam BNB — fee 1% dalam BNB tertahan di kontrak market dan tidak bisa disapu ke FeeDistributor (hanya fee USDT yang dibagi 50/30/20). Disarankan memakai USDT.",
     listPassBtn: "List pass",
     invalidPrice: "Harga tidak valid — isi angka, mis. 2 atau 1,5.",
     belowFloor: "Harga di bawah floor {tier}: minimum {min}.",
@@ -311,7 +299,7 @@ export const I18N = {
     errDeployBlockMissing:
       "Blok deploy kontrak market belum diisi di konfigurasi — fallback RPC tidak bisa berjalan.",
     errUserRejected: "Transaksi ditolak di wallet. Tidak ada yang terkirim.",
-    errInsufficientFunds: "BNB di wallet tidak cukup untuk gas (atau untuk pembayaran BNB).",
+    errInsufficientFunds: "BNB di wallet tidak cukup untuk gas.",
     errNoListing: "Listing tidak ditemukan — mungkin sudah terjual atau dibatalkan.",
     errNotSeller: "Hanya penjual yang bisa mengubah atau membatalkan listing ini.",
     errBelowFloor: "Harga di bawah floor tier pass ini.",
@@ -321,7 +309,7 @@ export const I18N = {
     errIncorrectValue: "Jumlah BNB yang dikirim tidak tepat sama dengan harga listing.",
     errValueNotAllowed: "Pembelian USDT tidak boleh mengirim BNB.",
     errInvalidPrice: "Harga tidak valid.",
-    errInvalidPaymentToken: "Mata uang pembayaran tidak valid (hanya USDT atau BNB).",
+    errInvalidPaymentToken: "Mata uang pembayaran tidak valid (hanya USDT).",
     errNotTreasury: "Hanya treasury yang bisa menarik fee yang terkumpul.",
     errNothingToSweep: "Tidak ada fee yang terkumpul untuk ditarik.",
     errPriceAboveMax:
@@ -343,10 +331,10 @@ export const I18N = {
     // -- meta / header --
     pageTitle: "Marketplace $KONG — Kong Mint Pass",
     metaDescription:
-      "Marketplace $KONG — buy and sell Kong Mint Pass on BNB Chain. Pay in USDT or BNB, royalty 5% to treasury, market fee 1%. Non-custodial: the pass stays in the seller's wallet.",
+      "Marketplace $KONG — buy and sell Kong Mint Pass on BNB Chain. Pay in USDT, royalty 5% to treasury, market fee 1%. Non-custodial: the pass stays in the seller's wallet.",
     ogDescription:
-      "Buy and sell Kong Mint Pass (1 pass = 1 $KONG share). Pay in USDT or BNB. Floor = mint price per tier.",
-    brandSub: "Buy and sell Kong Mint Pass — USDT or BNB",
+      "Buy and sell Kong Mint Pass (1 pass = 1 $KONG share). Pay in USDT. Floor = mint price per tier.",
+    brandSub: "Buy and sell Kong Mint Pass — USDT",
     mintPageBtn: "← Mint page",
     testnetDemoBtn: "Try the testnet demo",
     langSelectLabel: "Choose language",
@@ -363,7 +351,7 @@ export const I18N = {
     heroImgAlt: "Kong Mint Pass — Tier 1 Gold artwork: King Kong dressed as a secret agent",
     heroTitle: "Trade passes, no middleman.",
     heroP1:
-      "Every Mint Pass is one share of the $KONG sale. Here passes can be traded before they are claimed: pay in USDT or BNB, fixed price, and funds split automatically — seller 94%, royalty 5% to treasury, marketplace fee 1%.",
+      "Every Mint Pass is one share of the $KONG sale. Here passes can be traded before they are claimed: pay in USDT, fixed price, and funds split automatically — seller 94%, royalty 5% to treasury, marketplace fee 1%.",
     heroP2:
       "Non-custodial: the pass stays in the seller's wallet while listed. The seller can still claim or refund at any time — a listing whose pass has been claimed automatically cannot be bought.",
     heroP3:
@@ -427,10 +415,10 @@ export const I18N = {
     howTitle: "How it works",
     howListVerb: "List",
     howListText:
-      " — approve the market contract for your pass, then set a price (USDT or BNB). The price cannot go below the tier floor. The pass stays in your wallet.",
+      " — approve the market contract for your pass, then set a price (USDT). The price cannot go below the tier floor. The pass stays in your wallet.",
     howBuyVerb: "Buy",
     howBuyText:
-      " — for USDT listings, approve USDT for the price first; for BNB listings, BNB is sent with the buy transaction. Funds split automatically in one transaction: seller 94%, royalty 5% to treasury, fee 1% held in the market contract. Purchases are protected by a maximum price: if the listing price rises above the displayed price before the transaction is processed, the transaction is cancelled automatically.",
+      " — for USDT listings, approve USDT for the price first. Funds split automatically in one transaction: seller 94%, royalty 5% to treasury, fee 1% held in the market contract. Purchases are protected by a maximum price: if the listing price rises above the displayed price before the transaction is processed, the transaction is cancelled automatically.",
     howUpdateVerb: "Change / cancel",
     howUpdateText:
       " — the seller can change the price or cancel the listing at any time (gas only).",
@@ -440,19 +428,15 @@ export const I18N = {
     floorTableTitle: "Price floor per tier",
     thTier: "Tier",
     thFloorUsdt: "USDT floor",
-    thFloorBnb: "BNB floor (estimated)",
     thBreakeven: "Breakeven price*",
     tier1Usdt: "1 USDT",
-    tier1Bnb: "~0.0017 BNB",
     tier1Be: "1.064 USDT",
     tier2Usdt: "1.5 USDT",
-    tier2Bnb: "~0.00254 BNB",
     tier2Be: "1.596 USDT",
     tier3Usdt: "2 USDT",
-    tier3Bnb: "~0.00339 BNB",
     tier3Be: "2.128 USDT",
     breakevenNote:
-      "* Breakeven price: the sale price at which the seller nets exactly the mint price after the 6% cut (royalty 5% + fee 1%). The final BNB floor is set at deploy based on the BNB price then.",
+      "* Breakeven price: the sale price at which the seller nets exactly the mint price after the 6% cut (royalty 5% + fee 1%).",
     splitTableTitle: "Split example — a 2 USDT sale",
     thPart: "Part",
     thAmount: "Amount",
@@ -500,10 +484,6 @@ export const I18N = {
     salePhaseRefund: "Refund window open",
     salePhaseEnded: "Ended",
     // -- rates (JS) --
-    ratesNoteLive:
-      "Live rate (Binance US): 1 BNB ≈ {bnbUsdt} USDT.",
-    ratesNoteFallback:
-      "Reference rate of 19 Nov 2026 (price API unavailable): 1 BNB ≈ {bnbUsdt} USDT.",
     // -- listings (JS) --
     marketNotDeployedNote:
       "Listings will appear here after the market contract is deployed and passes are listed.",
@@ -550,8 +530,6 @@ export const I18N = {
     quoteSeller: "Seller",
     payUsdtNote:
       "USDT payment: if your allowance is not enough yet, you will first be asked to approve USDT for the price — then the buy transaction follows. Both need confirmation in your wallet.",
-    payBnbNote:
-      "BNB payment: BNB for the price is sent with the buy transaction — no separate approval.",
     maxPriceWarn:
       "Your purchase is protected by a maximum price: if the listing price rises above the price above before the transaction is processed, the transaction is cancelled automatically and you do not pay more. The listing is re-verified right before the transaction is sent.",
     confirmBuyBtn: "Confirm buy — {price}",
@@ -596,8 +574,6 @@ export const I18N = {
     pricePlaceholder: "e.g. 2",
     floorNoteList:
       "{tier} floor: {floor} · Breakeven price (net received = mint price): {breakeven} · Cut per sale: royalty 5% + fee 1%.",
-    bnbFeeWarning:
-      "Note: for BNB sales, the 1% fee in BNB stays in the market contract and cannot be swept to the FeeDistributor (only USDT fees are split 50/30/20). USDT is recommended.",
     listPassBtn: "List pass",
     invalidPrice: "Invalid price — enter a number, e.g. 2 or 1.5.",
     belowFloor: "Price below the {tier} floor: minimum {min}.",
@@ -626,7 +602,7 @@ export const I18N = {
     errDeployBlockMissing:
       "The market contract's deploy block is not set in the configuration — the RPC fallback cannot run.",
     errUserRejected: "Transaction rejected in the wallet. Nothing was sent.",
-    errInsufficientFunds: "Not enough BNB in the wallet for gas (or for a BNB payment).",
+    errInsufficientFunds: "Not enough BNB in the wallet for gas.",
     errNoListing: "Listing not found — it may already be sold or cancelled.",
     errNotSeller: "Only the seller can change or cancel this listing.",
     errBelowFloor: "Price below this pass tier's floor.",
@@ -636,7 +612,7 @@ export const I18N = {
     errIncorrectValue: "The BNB sent does not exactly match the listing price.",
     errValueNotAllowed: "A USDT purchase must not send BNB.",
     errInvalidPrice: "Invalid price.",
-    errInvalidPaymentToken: "Invalid payment currency (USDT or BNB only).",
+    errInvalidPaymentToken: "Invalid payment currency (USDT only).",
     errNotTreasury: "Only the treasury can withdraw the accumulated fees.",
     errNothingToSweep: "There are no accumulated fees to withdraw.",
     errPriceAboveMax:
@@ -658,9 +634,9 @@ export const I18N = {
     // -- 元信息 / 页眉 --
     pageTitle: "$KONG 市场——Kong Mint 通行证",
     metaDescription:
-      "$KONG 市场——在 BNB Chain 买卖 Kong Mint 通行证。支持 USDT 或 BNB 支付，版税 5% 归财库，市场手续费 1%。非托管：通行证仍在卖家钱包中。",
-    ogDescription: "买卖 Kong Mint 通行证（1 个通行证 = 1 份 $KONG）。支持 USDT 或 BNB 支付。底价 = 各等级铸造价。",
-    brandSub: "买卖 Kong Mint 通行证——USDT 或 BNB",
+      "$KONG 市场——在 BNB Chain 买卖 Kong Mint 通行证。支持 USDT 支付，版税 5% 归财库，市场手续费 1%。非托管：通行证仍在卖家钱包中。",
+    ogDescription: "买卖 Kong Mint 通行证（1 个通行证 = 1 份 $KONG）。支持 USDT 支付。底价 = 各等级铸造价。",
+    brandSub: "买卖 Kong Mint 通行证——USDT",
     mintPageBtn: "← 铸造页",
     testnetDemoBtn: "体验测试网演示",
     langSelectLabel: "选择语言",
@@ -675,7 +651,7 @@ export const I18N = {
     heroImgAlt: "Kong Mint 通行证——一级金卡艺术图：化装成特工的金刚",
     heroTitle: "买卖通行证，无需中间人。",
     heroP1:
-      "每个 Mint 通行证就是一份 $KONG 发售份额。在这里，通行证可以在领取前交易：支持 USDT 或 BNB 支付，价格固定，资金自动分配——卖家 94%、版税 5% 归财库、市场手续费 1%。",
+      "每个 Mint 通行证就是一份 $KONG 发售份额。在这里，通行证可以在领取前交易：支持 USDT 支付，价格固定，资金自动分配——卖家 94%、版税 5% 归财库、市场手续费 1%。",
     heroP2: "非托管：挂单期间通行证仍在卖家钱包中。卖家随时仍可领取或退款——通行证已被领取的挂单将自动无法购买。",
     heroP3: "挂单价格不得低于该等级的底价（与铸造价相同）：1 / 1.5 / 2 USDT。",
     // -- 发售状态 --
@@ -728,10 +704,10 @@ export const I18N = {
     howAria: "使用方法",
     howTitle: "使用方法",
     howListVerb: "上架",
-    howListText: "——先授权市场合约使用您的通行证，然后设定价格（USDT 或 BNB）。价格不得低于该等级的底价。通行证仍在您的钱包中。",
+    howListText: "——先授权市场合约使用您的通行证，然后设定价格（USDT）。价格不得低于该等级的底价。通行证仍在您的钱包中。",
     howBuyVerb: "购买",
     howBuyText:
-      "——USDT 挂单需先授权相应金额的 USDT；BNB 挂单则随购买交易一并发送 BNB。资金在单笔交易中自动分配：卖家 94%、版税 5% 归财库、手续费 1% 暂存于市场合约。购买受最高价保护：若挂单价格在交易处理前涨至高于显示价格，交易将自动取消。",
+      "——USDT 挂单需先授权相应金额的 USDT。资金在单笔交易中自动分配：卖家 94%、版税 5% 归财库、手续费 1% 暂存于市场合约。购买受最高价保护：若挂单价格在交易处理前涨至高于显示价格，交易将自动取消。",
     howUpdateVerb: "改价 / 取消",
     howUpdateText: "——卖家可随时改价或取消挂单（仅需 Gas）。",
     howClaimVerb: "领取 / 退款",
@@ -739,19 +715,15 @@ export const I18N = {
     floorTableTitle: "各等级价格底价",
     thTier: "等级",
     thFloorUsdt: "USDT 底价",
-    thFloorBnb: "BNB 底价（估算）",
     thBreakeven: "保本价*",
     tier1Usdt: "1 USDT",
-    tier1Bnb: "~0.0017 BNB",
     tier1Be: "1.064 USDT",
     tier2Usdt: "1.5 USDT",
-    tier2Bnb: "~0.00254 BNB",
     tier2Be: "1.596 USDT",
     tier3Usdt: "2 USDT",
-    tier3Bnb: "~0.00339 BNB",
     tier3Be: "2.128 USDT",
     breakevenNote:
-      "* 保本价：扣除 6%（版税 5% + 手续费 1%）后，卖家净收入恰好等于铸造价的售价。最终 BNB 底价在部署时根据当时 BNB 价格确定。",
+      "* 保本价：扣除 6%（版税 5% + 手续费 1%）后，卖家净收入恰好等于铸造价的售价。",
     splitTableTitle: "分配示例——2 USDT 的一笔销售",
     thPart: "部分",
     thAmount: "金额",
@@ -796,10 +768,6 @@ export const I18N = {
     salePhaseRefund: "退款窗口已开放",
     salePhaseEnded: "已结束",
     // -- 汇率（JS） --
-    ratesNoteLive:
-      "实时汇率（Binance US）：1 BNB ≈ {bnbUsdt} USDT。",
-    ratesNoteFallback:
-      "2026 年 11 月 19 日参考汇率（价格 API 不可用）：1 BNB ≈ {bnbUsdt} USDT。",
     // -- 挂单（JS） --
     marketNotDeployedNote: "市场合约部署并有通行证上架后，挂单将出现在这里。",
     marketNotDeployedEmpty: "市场尚未开放——市场合约尚未部署到主网。计划在发售于 2026 年 12 月 1 日开启且首个通行证出现后部署。",
@@ -837,7 +805,6 @@ export const I18N = {
     quoteClaim: "毕业后可领取",
     quoteSeller: "卖家",
     payUsdtNote: "USDT 支付：如授权额度不足，您将先被要求授权相应金额的 USDT，然后再发起购买交易。两者都需要在钱包中确认。",
-    payBnbNote: "BNB 支付：相应金额的 BNB 随购买交易一并发送——无需单独授权。",
     maxPriceWarn: "您的购买受最高价保护：若挂单价格在交易处理前涨至高于上方价格，交易将自动取消，您不会多付。交易发送前会再次验证挂单。",
     confirmBuyBtn: "确认购买——{price}",
     cancelBtn: "取消",
@@ -870,8 +837,6 @@ export const I18N = {
     pricePlaceholder: "例如：2",
     floorNoteList:
       "{tier} 底价：{floor}· 保本价（净收入 = 铸造价）：{breakeven} · 每笔销售扣除：版税 5% + 手续费 1%。",
-    bnbFeeWarning:
-      "注意：以 BNB 结算时，1% 的 BNB 手续费会滞留在市场合约中，无法归集到 FeeDistributor（仅 USDT 手续费按 50/30/20 分配）。建议使用 USDT。",
     listPassBtn: "上架通行证",
     invalidPrice: "价格无效——请输入数字，例如 2 或 1.5。",
     belowFloor: "价格低于 {tier} 底价：最低 {min}。",
@@ -895,7 +860,7 @@ export const I18N = {
     errSelfPurchase: "您不能购买自己的挂单。",
     errDeployBlockMissing: "配置中未填写市场合约的部署区块——RPC 备用方案无法运行。",
     errUserRejected: "交易在钱包中被拒绝。没有任何交易发出。",
-    errInsufficientFunds: "钱包中的 BNB 不足以支付 Gas（或 BNB 付款）。",
+    errInsufficientFunds: "钱包中的 BNB 不足以支付 Gas。",
     errNoListing: "未找到挂单——可能已售出或已取消。",
     errNotSeller: "只有卖家可以修改或取消该挂单。",
     errBelowFloor: "价格低于该通行证等级的底价。",
@@ -905,7 +870,7 @@ export const I18N = {
     errIncorrectValue: "发送的 BNB 金额与挂单价格不完全一致。",
     errValueNotAllowed: "USDT 购买不得发送 BNB。",
     errInvalidPrice: "价格无效。",
-    errInvalidPaymentToken: "支付货币无效（仅支持 USDT 或 BNB）。",
+    errInvalidPaymentToken: "支付货币无效（仅支持 USDT）。",
     errNotTreasury: "只有财库可以提取已累积的手续费。",
     errNothingToSweep: "没有可提取的已累积手续费。",
     errPriceAboveMax: "挂单价格在交易处理前发生了变化——购买已被最高价保护自动取消。请重新加载挂单后重试。",
