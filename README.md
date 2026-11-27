@@ -27,8 +27,8 @@ identical. See docs/DESIGN.md §16 and the regression tests
 | Treasury vesting | `0xd895ca5F431bA80687Bc9bf614EF850472E19f8B` |
 | Team vesting | `0x11151065995e0B2B6989038181Dd42902ae28078` |
 
-Deployed 19 Nov 2026 (token tx `0xa0fd4ecf…`, sale tx `0xd23294be…`).
-Source verified on BscScan and Sourcify (exact match). Funding complete:
+Deployed 19 Nov 2026 (token tx `0xa0fd4ecfadbb79cdc9924ed76b4cf43042ce57c16c9754dbf0c62472ab9a063f`, block 134379805; sale tx `0xd23294be0a683fbb92dca3c02e1b879635025753a1f248c6ffe4ff41048f694a`, block 134381462).
+Source verified on BscScan and Sourcify (exact match for KongToken, KongSale, KongMerkleDistributor and KongCommunityVesting; match / partial for KongMintPass and both KongVesting). Funding complete:
 sale 750M KONG, each vesting 100M, deployer holds 50M (community).
 Sale starts 1 Dec 2026 00:00 WIB (`saleStart` 1796058000).
 
